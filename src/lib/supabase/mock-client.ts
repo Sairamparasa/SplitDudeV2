@@ -476,6 +476,17 @@ class MockAuth {
     return { error: null }
   }
 
+  async signInWithOAuth({ provider, options }: any) {
+    if (isBrowser) {
+      // Simulate Google Login by logging in as Sarah Connor in sandbox mode
+      const sarah = seedProfiles[1]
+      localStorage.setItem('splitdude_mock_user', JSON.stringify({ id: sarah.id, email: sarah.email }))
+      document.cookie = `splitdude_session_user=${sarah.id}; path=/; max-age=86400`
+      window.location.href = options?.redirectTo || '/home'
+    }
+    return { data: { provider, url: '/home' }, error: null }
+  }
+
   onAuthStateChange() {
     // No-op for mock
     return { data: { subscription: { unsubscribe: () => {} } } }
