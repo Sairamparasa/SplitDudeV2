@@ -159,14 +159,7 @@ create policy "Users can view memberships of groups they belong to" on public.gr
     public.is_group_member(group_id, auth.uid())
   );
 create policy "Members can add others to their groups" on public.group_members
-  for insert with check (
-    public.is_group_member(group_id, auth.uid())
-    or
-    exists (
-      select 1 from public.groups g
-      where g.id = group_members.group_id and g.created_by = auth.uid()
-    )
-  );
+  for insert with check (auth.role() = 'authenticated');
 create policy "Users can remove themselves from groups" on public.group_members
   for delete using (user_id = auth.uid());
 
