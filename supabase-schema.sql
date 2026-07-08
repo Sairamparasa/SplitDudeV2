@@ -155,9 +155,7 @@ $$ language plpgsql security definer;
 
 -- Group Members Policies
 create policy "Users can view memberships of groups they belong to" on public.group_members
-  for select using (
-    public.is_group_member(group_id, auth.uid())
-  );
+  for select using (auth.role() = 'authenticated');
 create policy "Members can add others to their groups" on public.group_members
   for insert with check (auth.role() = 'authenticated');
 create policy "Users can remove themselves from groups" on public.group_members
