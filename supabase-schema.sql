@@ -141,23 +141,30 @@ create policy "Anyone can view user profiles (required for friend search)" on pu
 create policy "Users can update their own profile details" on public.profiles
   for update using (auth.uid() = id);
 
+-- Helper: Non-recursive group membership check (Security Definer bypasses RLS)
+create or replace function public.is_group_member(group_id uuid, user_id uuid)
+returns boolean as $$
+begin
+  return exists (
+    select 1 from public.group_members gm
+    where gm.group_id = is_group_member.group_id and gm.user_id = is_group_member.user_id
+  );
+end;
+$$ language plpgsql security definer;
+
 -- Group Members Policies
 create policy "Users can view memberships of groups they belong to" on public.group_members
   for select using (
-    exists (
-      select 1 from public.group_members gm
-      where gm.group_id = group_members.group_id and gm.user_id = auth.uid()
-    )
+    public.is_group_member(group_id, auth.uid())
   );
 create policy "Members can add others to their groups" on public.group_members
   for insert with check (
+    public.is_group_member(group_id, auth.uid())
+    or
     exists (
-      select 1 from public.group_members gm
-      where gm.group_id = group_members.group_id and gm.user_id = auth.uid()
-    ) or not exists (
-      select 1 from public.group_members gm
-      where gm.group_id = group_members.group_id
-    ) -- Allow the creator to join during initialization
+      select 1 from public.groups g
+      where g.id = group_members.group_id and g.created_by = auth.uid()
+    )
   );
 create policy "Users can remove themselves from groups" on public.group_members
   for delete using (user_id = auth.uid());
