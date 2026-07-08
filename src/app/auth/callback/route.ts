@@ -1,5 +1,6 @@
+import { createServerClient } from '@supabase/ssr'
 import { NextResponse } from 'next/server'
-import { createClient } from '@/lib/supabase/server'
+import { cookies } from 'next/headers'
 
 export async function GET(request: Request) {
   const { searchParams, origin } = new URL(request.url)
@@ -7,22 +8,44 @@ export async function GET(request: Request) {
   const next = searchParams.get('next') ?? '/home'
 
   if (code) {
-    const supabase = await createClient()
+    const cookieStore = await cookies()
+    const response = NextResponse.redirect(`${origin}${next}`)
+
+    // Create a Supabase client that writes session cookies directly to the redirect response
+    const supabase = createServerClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+      {
+        cookies: {
+          getAll() {
+            return cookieStore.getAll()
+          },
+          setAll(cookiesToSet) {
+            try {
+              cookiesToSet.forEach(({ name, value, options }) =>
+                cookieStore.set(name, value, options)
+              )
+              cookiesToSet.forEach(({ name, value, options }) =>
+                response.cookies.set(name, value, options)
+              )
+            } catch {
+              // Can be ignored in Server Component/Route contexts
+            }
+          },
+        },
+      }
+    )
+
     const { error } = await supabase.auth.exchangeCodeForSession(code)
+    
     if (!error) {
-      // In OAuth sandbox, the session user cookie needs to be matched
       const { data: { user } } = await supabase.auth.getUser()
-      
-      const response = NextResponse.redirect(`${origin}${next}`)
-      
       if (user) {
-        // Set mock/real cookie fallback for middleware
         response.cookies.set('splitdude_session_user', user.id, {
           path: '/',
           maxAge: 60 * 60 * 24, // 24 hours
         })
       }
-      
       return response
     }
   }
