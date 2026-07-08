@@ -36,7 +36,7 @@ export async function POST(req: NextRequest) {
 
     const { error: membersError } = await supabase
       .from('group_members')
-      .insert(membersToInsert)
+      .upsert(membersToInsert, { onConflict: 'group_id,user_id' })
 
     if (membersError) throw membersError
 
@@ -90,11 +90,14 @@ export async function PUT(req: NextRequest) {
     // 2. Add user to group
     const { error: insertError } = await supabase
       .from('group_members')
-      .insert({
-        group_id: groupId,
-        user_id: userIdToAdd,
-        role: 'member',
-      })
+      .upsert(
+        {
+          group_id: groupId,
+          user_id: userIdToAdd,
+          role: 'member',
+        },
+        { onConflict: 'group_id,user_id' }
+      )
 
     if (insertError) throw insertError
 
