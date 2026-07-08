@@ -172,13 +172,19 @@ create policy "Users can remove themselves from groups" on public.group_members
 -- Groups Policies
 create policy "Users can view groups they are members of" on public.groups
   for select using (
+    created_by = auth.uid()
+    or
     exists (
       select 1 from public.group_members gm
       where gm.group_id = groups.id and gm.user_id = auth.uid()
     )
   );
 create policy "Authenticated users can create a group" on public.groups
-  for insert with check (auth.uid() is not null);
+  for insert with check (
+    auth.role() = 'authenticated'
+    and
+    (created_by = auth.uid() or created_by is null)
+  );
 create policy "Group creators can update their groups" on public.groups
   for update using (created_by = auth.uid());
 create policy "Group creators can delete their groups" on public.groups
