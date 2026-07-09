@@ -1,6 +1,6 @@
 'use client'
 
-import { use, useState, useMemo } from 'react'
+import { use, useState, useMemo, useEffect } from 'react'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { createClient } from '@/lib/supabase/client'
 import { calculateNetBalances, simplifyDebts, Member, Expense, ExpenseSplit, Settlement } from '@/lib/utils/debt-simplifier'
@@ -70,6 +70,30 @@ export default function GroupDetailPage({ params }: PageProps) {
     queryFn: async () => {
       const { data: { user } } = await supabase.auth.getUser()
       return user
+    },
+  })
+
+  // Fetch user's friends list for instant name-based search suggestions
+  const { data: friendsList } = useQuery({
+    queryKey: ['friends', currentUser?.id],
+    enabled: !!currentUser?.id,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('friends')
+        .select(`
+          id,
+          user_id_1,
+          user_id_2,
+          profile1:profiles!friends_user_id_1_fkey(*),
+          profile2:profiles!friends_user_id_2_fkey(*)
+        `)
+        .or(`user_id_1.eq.${currentUser?.id},user_id_2.eq.${currentUser?.id}`)
+
+      if (error) throw error
+
+      return (data || []).map((f: any) => {
+        return f.user_id_1 === currentUser?.id ? f.profile2 : f.profile1
+      }).filter(Boolean) as any[]
     },
   })
 
@@ -168,6 +192,78 @@ export default function GroupDetailPage({ params }: PageProps) {
     return [groupData.group]
   }, [groupData])
 
+  // Handle Search Friend
+  const handleSearchFriend = async () => {
+    setSearchError(null)
+    setSearchResults([])
+    const query = searchCode.trim()
+
+    if (!query) return
+
+    setSearching(true)
+    try {
+      const isSplitId = query.toUpperCase().startsWith('SPD') && query.length === 9
+
+      if (isSplitId) {
+        const { data, error } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('unique_code', query.toUpperCase())
+          .maybeSingle()
+
+        if (error) throw error
+        if (!data) {
+          setSearchError('User not found.')
+          return
+        }
+
+        if (groupData?.members?.some((m: any) => m.id === data.id)) {
+          setSearchError('User is already a member of this group.')
+          return
+        }
+
+        setSearchResults([data])
+      }
+    } catch (err: any) {
+      setSearchError(err.message)
+    } finally {
+      setSearching(false)
+    }
+  }
+
+  // Instant real-time name filtering
+  useEffect(() => {
+    const query = searchCode.trim()
+    if (!query) {
+      setSearchResults([])
+      setSearchError(null)
+      return
+    }
+
+    const isSplitId = query.toUpperCase().startsWith('SPD')
+    if (isSplitId) {
+      // Clear suggestions for IDs; wait for search click or 9 chars
+      setSearchResults([])
+      setSearchError(null)
+      if (query.length === 9) {
+        handleSearchFriend()
+      }
+    } else {
+      if (friendsList) {
+        const matched = friendsList.filter((friend) =>
+          friend.full_name.toLowerCase().includes(query.toLowerCase())
+        )
+        setSearchResults(matched)
+        if (matched.length === 0) {
+          setSearchError('No matching friends found in your friends list.')
+        } else {
+          setSearchError(null)
+        }
+      }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchCode, friendsList])
+
   if (isLoading) {
     return (
       <div className="space-y-6">
@@ -248,73 +344,9 @@ export default function GroupDetailPage({ params }: PageProps) {
     }
   }
 
-  // Handle Search Friend
-  const handleSearchFriend = async () => {
-    setSearchError(null)
-    setSearchResults([])
-    const query = searchCode.trim()
 
-    if (!query) return
 
-    setSearching(true)
-    try {
-      const isSplitId = query.toUpperCase().startsWith('SPD') && query.length === 9
 
-      if (isSplitId) {
-        const { data, error } = await supabase
-          .from('profiles')
-          .select('*')
-          .eq('unique_code', query.toUpperCase())
-          .maybeSingle()
-
-        if (error) throw error
-        if (!data) {
-          setSearchError('User not found.')
-          return
-        }
-
-        if (members.some((m) => m.id === data.id)) {
-          setSearchError('User is already a member of this group.')
-          return
-        }
-
-        setSearchResults([data])
-      } else {
-        // Search by name in friends list
-        const { data: friendships, error: friendsError } = await supabase
-          .from('friends')
-          .select(`
-            id,
-            user_id_1,
-            user_id_2,
-            profile1:profiles!friends_user_id_1_fkey(*),
-            profile2:profiles!friends_user_id_2_fkey(*)
-          `)
-          .or(`user_id_1.eq.${currentUser?.id},user_id_2.eq.${currentUser?.id}`)
-
-        if (friendsError) throw friendsError
-
-        const friends = (friendships || []).map((f: any) => {
-          return f.user_id_1 === currentUser?.id ? f.profile2 : f.profile1;
-        }).filter(Boolean);
-
-        const matchedFriends = friends.filter((friend: any) => {
-          return friend.full_name.toLowerCase().includes(query.toLowerCase());
-        });
-
-        if (matchedFriends.length === 0) {
-          setSearchError('No matching friends found in your friends list.')
-          return
-        }
-
-        setSearchResults(matchedFriends)
-      }
-    } catch (err: any) {
-      setSearchError(err.message)
-    } finally {
-      setSearching(false)
-    }
-  }
 
   // Handle Add Member
   const handleAddMember = async (profile: any) => {

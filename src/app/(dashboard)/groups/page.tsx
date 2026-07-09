@@ -3,7 +3,7 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { createClient } from '@/lib/supabase/client'
 import { Plus, Search, Users, X, AlertCircle, Loader2, ArrowRight } from 'lucide-react'
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import Link from 'next/link'
 import { motion, AnimatePresence } from 'framer-motion'
 
@@ -77,6 +77,30 @@ export default function GroupsPage() {
     return (groups || []).filter((g) => g.name.toLowerCase().includes(term))
   }, [groups, searchTerm])
 
+  // Fetch user's friends list for instant name-based search suggestions
+  const { data: friendsList } = useQuery({
+    queryKey: ['friends', currentUser?.id],
+    enabled: !!currentUser?.id,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('friends')
+        .select(`
+          id,
+          user_id_1,
+          user_id_2,
+          profile1:profiles!friends_user_id_1_fkey(*),
+          profile2:profiles!friends_user_id_2_fkey(*)
+        `)
+        .or(`user_id_1.eq.${currentUser!.id},user_id_2.eq.${currentUser!.id}`)
+
+      if (error) throw error
+
+      return (data || []).map((f: any) => {
+        return f.user_id_1 === currentUser!.id ? f.profile2 : f.profile1
+      }).filter(Boolean) as Profile[]
+    },
+  })
+
   const handleSearchFriend = async () => {
     setSearchError(null)
     setSearchResults([])
@@ -112,38 +136,6 @@ export default function GroupsPage() {
         }
 
         setSearchResults([data as Profile])
-      } else {
-        // Search by name in friends list
-        const { data: friendships, error: friendsError } = await supabase
-          .from('friends')
-          .select(`
-            id,
-            user_id_1,
-            user_id_2,
-            profile1:profiles!friends_user_id_1_fkey(*),
-            profile2:profiles!friends_user_id_2_fkey(*)
-          `)
-          .or(`user_id_1.eq.${currentUser!.id},user_id_2.eq.${currentUser!.id}`)
-
-        if (friendsError) {
-          setSearchError('Error fetching friends list.')
-          return
-        }
-
-        const friends = (friendships || []).map((f: any) => {
-          return f.user_id_1 === currentUser!.id ? f.profile2 : f.profile1;
-        }).filter(Boolean);
-
-        const matchedFriends = friends.filter((friend: any) => {
-          return friend.full_name.toLowerCase().includes(query.toLowerCase());
-        });
-
-        if (matchedFriends.length === 0) {
-          setSearchError('No matching friends found in your friends list.')
-          return
-        }
-
-        setSearchResults(matchedFriends)
       }
     } catch {
       setSearchError('An unexpected error occurred.')
@@ -151,6 +143,39 @@ export default function GroupsPage() {
       setSearching(false)
     }
   }
+
+  // Instant real-time name filtering
+  useEffect(() => {
+    const query = searchCode.trim()
+    if (!query) {
+      setSearchResults([])
+      setSearchError(null)
+      return
+    }
+
+    const isSplitId = query.toUpperCase().startsWith('SPD')
+    if (isSplitId) {
+      // Clear suggestions for IDs; wait for search click or 9 chars
+      setSearchResults([])
+      setSearchError(null)
+      if (query.length === 9) {
+        handleSearchFriend()
+      }
+    } else {
+      if (friendsList) {
+        const matched = friendsList.filter((friend) =>
+          friend.full_name.toLowerCase().includes(query.toLowerCase())
+        )
+        setSearchResults(matched)
+        if (matched.length === 0) {
+          setSearchError('No matching friends found in your friends list.')
+        } else {
+          setSearchError(null)
+        }
+      }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchCode, friendsList])
 
   const handleAddMember = (profile: Profile) => {
     setSelectedMembers([...selectedMembers, profile])
