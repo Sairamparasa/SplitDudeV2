@@ -411,7 +411,7 @@ export default function GroupDetailPage({ params }: PageProps) {
         <Link href="/groups" className="flex items-center gap-2 text-white/50 hover:text-white transition-colors text-xs font-bold uppercase tracking-wider">
           <ArrowLeft className="w-4 h-4 text-brand-accent" /> Back to Groups
         </Link>
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           {isCreator && (
             <>
               <button
