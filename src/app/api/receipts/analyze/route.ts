@@ -43,7 +43,7 @@ export async function POST(req: NextRequest) {
     if (!response.ok) {
       const errorText = await response.text()
       console.error('API Gateway failed:', errorText)
-      throw new Error(`Failed to process receipt via API Gateway: ${response.statusText}`)
+      throw new Error(`Receipt scanner is currently offline (unreachable). Please enter the details manually below.`)
     }
 
     const result = await response.json()

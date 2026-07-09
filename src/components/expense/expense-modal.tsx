@@ -212,7 +212,7 @@ export default function ExpenseModal({
           setError(result.error || 'Failed to scan receipt. Please enter manually.')
         }
       } catch {
-        setError('Scanning error. Plase fill manually.')
+        setError('Scanning error. Please fill manually.')
       } finally {
         setStep(3)
       }
