@@ -22,7 +22,7 @@ export async function POST(req: NextRequest) {
     const base64Content = buffer.toString('base64')
 
     // 3. Prepare payload for AWS API Gateway / Lambda (deployed stage dev)
-    const apiGatewayUrl = process.env.AWS_API_GATEWAY_URL || 'https://y6kkpw389a.execute-api.us-east-1.amazonaws.com/dev'
+    const apiGatewayUrl = 'https://y6kkpw389a.execute-api.us-east-1.amazonaws.com/dev'
     const fileName = `${user.id}-${Date.now()}-${file.name}`
     const payload = {
       fileContent: base64Content,
