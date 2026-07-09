@@ -209,10 +209,10 @@ export default function ExpenseModal({
           setPrefilled(true)
           setTimeout(() => setPrefilled(false), 2000)
         } else {
-          setError(result.error || 'Failed to scan receipt. Please enter manually.')
+          setError(result.error || 'Failed to scan receipt.')
         }
-      } catch {
-        setError('Scanning error. Please fill manually.')
+      } catch (err: any) {
+        setError(`Scanning error: ${err?.message || err || 'Unknown error'}`)
       } finally {
         setStep(3)
       }
