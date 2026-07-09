@@ -49,7 +49,7 @@ export default function GroupDetailPage({ params }: PageProps) {
 
   // Add Member states
   const [searchCode, setSearchCode] = useState('')
-  const [searchResult, setSearchResult] = useState<any | null>(null)
+  const [searchResults, setSearchResults] = useState<any[]>([])
   const [searchError, setSearchError] = useState<string | null>(null)
   const [searching, setSearching] = useState(false)
   const [addingMember, setAddingMember] = useState(false)
@@ -251,34 +251,64 @@ export default function GroupDetailPage({ params }: PageProps) {
   // Handle Search Friend
   const handleSearchFriend = async () => {
     setSearchError(null)
-    setSearchResult(null)
-    const formattedCode = searchCode.trim().toUpperCase()
+    setSearchResults([])
+    const query = searchCode.trim()
 
-    if (!formattedCode.startsWith('SPD') || formattedCode.length !== 9) {
-      setSearchError('Invalid code. Example: SPD7H4K2M')
-      return
-    }
+    if (!query) return
 
     setSearching(true)
     try {
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('unique_code', formattedCode)
-        .maybeSingle()
+      const isSplitId = query.toUpperCase().startsWith('SPD') && query.length === 9
 
-      if (error) throw error
-      if (!data) {
-        setSearchError('User not found.')
-        return
+      if (isSplitId) {
+        const { data, error } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('unique_code', query.toUpperCase())
+          .maybeSingle()
+
+        if (error) throw error
+        if (!data) {
+          setSearchError('User not found.')
+          return
+        }
+
+        if (members.some((m) => m.id === data.id)) {
+          setSearchError('User is already a member of this group.')
+          return
+        }
+
+        setSearchResults([data])
+      } else {
+        // Search by name in friends list
+        const { data: friendships, error: friendsError } = await supabase
+          .from('friends')
+          .select(`
+            id,
+            user_id_1,
+            user_id_2,
+            profile1:profiles!friends_user_id_1_fkey(*),
+            profile2:profiles!friends_user_id_2_fkey(*)
+          `)
+          .or(`user_id_1.eq.${currentUser?.id},user_id_2.eq.${currentUser?.id}`)
+
+        if (friendsError) throw friendsError
+
+        const friends = (friendships || []).map((f: any) => {
+          return f.user_id_1 === currentUser?.id ? f.profile2 : f.profile1;
+        }).filter(Boolean);
+
+        const matchedFriends = friends.filter((friend: any) => {
+          return friend.full_name.toLowerCase().includes(query.toLowerCase());
+        });
+
+        if (matchedFriends.length === 0) {
+          setSearchError('No matching friends found in your friends list.')
+          return
+        }
+
+        setSearchResults(matchedFriends)
       }
-
-      if (members.some((m) => m.id === data.id)) {
-        setSearchError('User is already a member of this group.')
-        return
-      }
-
-      setSearchResult(data)
     } catch (err: any) {
       setSearchError(err.message)
     } finally {
@@ -287,8 +317,8 @@ export default function GroupDetailPage({ params }: PageProps) {
   }
 
   // Handle Add Member
-  const handleAddMember = async () => {
-    if (!searchResult) return
+  const handleAddMember = async (profile: any) => {
+    if (!profile) return
     setAddingMember(true)
     try {
       const mockActive = typeof window !== 'undefined' && (process.env.NEXT_PUBLIC_MOCK_SUPABASE === 'true' || !process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL.includes('your-supabase-url'))
@@ -298,7 +328,7 @@ export default function GroupDetailPage({ params }: PageProps) {
           .from('group_members')
           .insert({
             group_id: groupId,
-            user_id: searchResult.id,
+            user_id: profile.id,
           })
 
         if (error) throw error
@@ -308,7 +338,7 @@ export default function GroupDetailPage({ params }: PageProps) {
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             groupId,
-            userIdToAdd: searchResult.id,
+            userIdToAdd: profile.id,
           }),
         }).catch((err) => console.error('SNS trigger error:', err))
       } else {
@@ -317,7 +347,7 @@ export default function GroupDetailPage({ params }: PageProps) {
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             groupId,
-            userIdToAdd: searchResult.id,
+            userIdToAdd: profile.id,
           }),
         })
         const result = await res.json()
@@ -326,7 +356,7 @@ export default function GroupDetailPage({ params }: PageProps) {
 
       setAddMemberModalOpen(false)
       setSearchCode('')
-      setSearchResult(null)
+      setSearchResults([])
       refetch()
     } catch (err: any) {
       setSearchError(err.message)
@@ -750,7 +780,7 @@ export default function GroupDetailPage({ params }: PageProps) {
                 onClick={() => {
                   setAddMemberModalOpen(false)
                   setSearchCode('')
-                  setSearchResult(null)
+                  setSearchResults([])
                   setSearchError(null)
                 }}
                 className="absolute top-5 right-5 text-white/40 hover:text-white bg-white/5 p-2 rounded-full border border-white/5 transition-all cursor-pointer"
@@ -783,22 +813,33 @@ export default function GroupDetailPage({ params }: PageProps) {
                   </p>
                 )}
 
-                {searchResult && (
-                  <div className="mt-3 p-3 bg-white/2 border border-white/5 rounded-2xl flex items-center justify-between">
-                    <div className="flex items-center gap-2.5">
-                      <img src={searchResult.avatar_url} alt={searchResult.full_name} className="w-8 h-8 rounded-full object-cover border border-white/10" />
-                      <div>
-                        <p className="text-xs font-bold text-white">{searchResult.full_name}</p>
-                        <p className="text-[9px] text-brand-accent font-mono mt-0.5">{searchResult.unique_code}</p>
-                      </div>
-                    </div>
-                    <button
-                      onClick={handleAddMember}
-                      disabled={addingMember}
-                      className="px-3 py-1.5 bg-brand-accent hover:bg-brand-accent/90 text-[10px] font-bold rounded-lg transition-all cursor-pointer"
-                    >
-                      {addingMember ? '...' : 'Add'}
-                    </button>
+                {searchResults.length > 0 && (
+                  <div className="space-y-2 mt-3 max-h-[220px] overflow-y-auto pr-1">
+                    {searchResults.map((result) => {
+                      const isAlreadyMember = members.some((m) => m.id === result.id)
+                      return (
+                        <div key={result.id} className="p-3 bg-white/2 border border-white/5 rounded-2xl flex items-center justify-between group">
+                          <div className="flex items-center gap-2.5">
+                            <img src={result.avatar_url} alt={result.full_name} className="w-8 h-8 rounded-full object-cover border border-white/10" />
+                            <div>
+                              <p className="text-xs font-bold text-white">{result.full_name}</p>
+                              <p className="text-[9px] text-brand-accent font-mono mt-0.5">{result.unique_code}</p>
+                            </div>
+                          </div>
+                          {isAlreadyMember ? (
+                            <span className="text-[10px] text-white/40 font-semibold px-2.5 py-1.5">Member</span>
+                          ) : (
+                            <button
+                              onClick={() => handleAddMember(result)}
+                              disabled={addingMember}
+                              className="px-3 py-1.5 bg-brand-accent hover:bg-brand-accent/90 disabled:bg-brand-accent/40 text-[10px] font-bold rounded-lg transition-all cursor-pointer text-white"
+                            >
+                              {addingMember ? '...' : 'Add'}
+                            </button>
+                          )}
+                        </div>
+                      )
+                    })}
                   </div>
                 )}
               </div>

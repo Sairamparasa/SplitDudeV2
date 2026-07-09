@@ -22,7 +22,7 @@ export default function GroupsPage() {
   const [groupDesc, setGroupDesc] = useState('')
   const [groupIcon, setGroupIcon] = useState('✈️')
   const [searchCode, setSearchCode] = useState('')
-  const [searchResult, setSearchResult] = useState<Profile | null>(null)
+  const [searchResults, setSearchResults] = useState<Profile[]>([])
   const [searchError, setSearchError] = useState<string | null>(null)
   const [searching, setSearching] = useState(false)
   const [selectedMembers, setSelectedMembers] = useState<Profile[]>([])
@@ -79,44 +79,72 @@ export default function GroupsPage() {
 
   const handleSearchFriend = async () => {
     setSearchError(null)
-    setSearchResult(null)
-    const formattedCode = searchCode.trim().toUpperCase()
+    setSearchResults([])
+    const query = searchCode.trim()
 
-    if (!formattedCode.startsWith('SPD') || formattedCode.length !== 9) {
-      setSearchError('Invalid code format. Example: SPD7H4K2M')
-      return
-    }
+    if (!query) return
 
     setSearching(true)
 
     try {
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('unique_code', formattedCode)
-        .maybeSingle()
+      const isSplitId = query.toUpperCase().startsWith('SPD') && query.length === 9
 
-      if (error) {
-        setSearchError('Error finding user.')
-        return
+      if (isSplitId) {
+        const { data, error } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('unique_code', query.toUpperCase())
+          .maybeSingle()
+
+        if (error) {
+          setSearchError('Error finding user.')
+          return
+        }
+
+        if (!data) {
+          setSearchError('User not found.')
+          return
+        }
+
+        if (data.id === currentUser?.id) {
+          setSearchError('You cannot add yourself.')
+          return
+        }
+
+        setSearchResults([data as Profile])
+      } else {
+        // Search by name in friends list
+        const { data: friendships, error: friendsError } = await supabase
+          .from('friends')
+          .select(`
+            id,
+            user_id_1,
+            user_id_2,
+            profile1:profiles!friends_user_id_1_fkey(*),
+            profile2:profiles!friends_user_id_2_fkey(*)
+          `)
+          .or(`user_id_1.eq.${currentUser!.id},user_id_2.eq.${currentUser!.id}`)
+
+        if (friendsError) {
+          setSearchError('Error fetching friends list.')
+          return
+        }
+
+        const friends = (friendships || []).map((f: any) => {
+          return f.user_id_1 === currentUser!.id ? f.profile2 : f.profile1;
+        }).filter(Boolean);
+
+        const matchedFriends = friends.filter((friend: any) => {
+          return friend.full_name.toLowerCase().includes(query.toLowerCase());
+        });
+
+        if (matchedFriends.length === 0) {
+          setSearchError('No matching friends found in your friends list.')
+          return
+        }
+
+        setSearchResults(matchedFriends)
       }
-
-      if (!data) {
-        setSearchError('User not found.')
-        return
-      }
-
-      if (data.id === currentUser?.id) {
-        setSearchError('You cannot add yourself.')
-        return
-      }
-
-      if (selectedMembers.some((m) => m.id === data.id)) {
-        setSearchError('User already added to list.')
-        return
-      }
-
-      setSearchResult(data as Profile)
     } catch {
       setSearchError('An unexpected error occurred.')
     } finally {
@@ -126,7 +154,7 @@ export default function GroupsPage() {
 
   const handleAddMember = (profile: Profile) => {
     setSelectedMembers([...selectedMembers, profile])
-    setSearchResult(null)
+    setSearchResults([])
     setSearchCode('')
   }
 
@@ -465,26 +493,37 @@ export default function GroupsPage() {
                   )}
 
                   {/* Search Result display */}
-                  {searchResult && (
-                    <div className="mt-3 p-3 bg-white/2 border border-white/5 rounded-2xl flex items-center justify-between">
-                      <div className="flex items-center gap-2.5">
-                        <img
-                          src={searchResult.avatar_url}
-                          alt={searchResult.full_name}
-                          className="w-8 h-8 rounded-full object-cover border border-white/10"
-                        />
-                        <div>
-                          <p className="text-xs font-bold text-white">{searchResult.full_name}</p>
-                          <p className="text-[9px] text-brand-accent font-mono mt-0.5">{searchResult.unique_code}</p>
-                        </div>
-                      </div>
-                      <button
-                        type="button"
-                        onClick={() => handleAddMember(searchResult)}
-                        className="px-2.5 py-1.5 bg-brand-accent hover:bg-brand-accent/90 text-[10px] font-bold rounded-lg transition-all"
-                      >
-                        Add
-                      </button>
+                  {searchResults.length > 0 && (
+                    <div className="space-y-2 mt-3 max-h-[200px] overflow-y-auto pr-1">
+                      {searchResults.map((result) => {
+                        const isAlreadyAdded = selectedMembers.some((m) => m.id === result.id)
+                        return (
+                          <div key={result.id} className="p-3 bg-white/2 border border-white/5 rounded-2xl flex items-center justify-between group">
+                            <div className="flex items-center gap-2.5">
+                              <img
+                                src={result.avatar_url}
+                                alt={result.full_name}
+                                className="w-8 h-8 rounded-full object-cover border border-white/10"
+                              />
+                              <div>
+                                <p className="text-xs font-bold text-white">{result.full_name}</p>
+                                <p className="text-[9px] text-brand-accent font-mono mt-0.5">{result.unique_code}</p>
+                              </div>
+                            </div>
+                            {isAlreadyAdded ? (
+                              <span className="text-[10px] text-white/40 font-semibold px-2.5 py-1.5">Added</span>
+                            ) : (
+                              <button
+                                type="button"
+                                onClick={() => handleAddMember(result)}
+                                className="px-2.5 py-1.5 bg-brand-accent hover:bg-brand-accent/90 text-[10px] font-bold rounded-lg transition-all cursor-pointer"
+                              >
+                                Add
+                              </button>
+                            )}
+                          </div>
+                        )
+                      })}
                     </div>
                   )}
 
