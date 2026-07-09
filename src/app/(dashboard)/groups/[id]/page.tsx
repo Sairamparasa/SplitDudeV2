@@ -454,9 +454,9 @@ export default function GroupDetailPage({ params }: PageProps) {
           <div className="absolute top-0 right-0 w-16 h-16 bg-white/3 rounded-full blur-xl pointer-events-none"></div>
           <p className="text-[10px] font-bold text-white/40 uppercase tracking-wider">Your Net Group Balance</p>
           {myBalance > 0 ? (
-            <h2 className="text-xl font-extrabold text-brand-success mt-1 font-mono">+${myBalance.toFixed(2)}</h2>
+            <h2 className="text-xl font-extrabold text-brand-success mt-1 font-mono">+₹{myBalance.toFixed(2)}</h2>
           ) : myBalance < 0 ? (
-            <h2 className="text-xl font-extrabold text-brand-danger mt-1 font-mono">-${Math.abs(myBalance).toFixed(2)}</h2>
+            <h2 className="text-xl font-extrabold text-brand-danger mt-1 font-mono">-₹{Math.abs(myBalance).toFixed(2)}</h2>
           ) : (
             <h2 className="text-xl font-bold text-white/40 mt-1 uppercase tracking-wide">Settled Up</h2>
           )}
@@ -488,7 +488,7 @@ export default function GroupDetailPage({ params }: PageProps) {
                     <span className={`text-xs font-bold font-mono ${
                       bal > 0 ? 'text-brand-success' : bal < 0 ? 'text-brand-danger' : 'text-white/35'
                     }`}>
-                      {bal > 0 ? `+$${bal.toFixed(2)}` : bal < 0 ? `-$${Math.abs(bal).toFixed(2)}` : 'Settled'}
+                      {bal > 0 ? `+₹${bal.toFixed(2)}` : bal < 0 ? `-₹${Math.abs(bal).toFixed(2)}` : 'Settled'}
                     </span>
                   </div>
                 )
@@ -514,7 +514,7 @@ export default function GroupDetailPage({ params }: PageProps) {
                       <span className="font-bold text-brand-danger">{suggested.fromName}</span>
                       <span className="text-white/50"> owes </span>
                       <span className="font-bold text-brand-success">{suggested.toName}</span>
-                      <p className="text-sm font-bold text-white font-mono mt-1">${suggested.amount.toFixed(2)}</p>
+                      <p className="text-sm font-bold text-white font-mono mt-1">₹{suggested.amount.toFixed(2)}</p>
                     </div>
                     {(suggested.from === currentUser?.id || suggested.to === currentUser?.id) && (
                       <button
@@ -582,7 +582,7 @@ export default function GroupDetailPage({ params }: PageProps) {
                           </div>
                           <div className="text-right shrink-0 flex items-center gap-3">
                             <div>
-                              <p className="font-mono font-bold text-sm text-white">${Number(expense.amount).toFixed(2)}</p>
+                              <p className="font-mono font-bold text-sm text-white">₹{Number(expense.amount).toFixed(2)}</p>
                               <p className="text-[9px] text-white/30 font-semibold mt-0.5">{new Date(expense.created_at).toLocaleDateString([], { month: 'short', day: 'numeric' })}</p>
                             </div>
                             <ChevronRight className="w-4 h-4 text-white/20 group-hover:text-brand-accent transition-colors" />
@@ -619,7 +619,7 @@ export default function GroupDetailPage({ params }: PageProps) {
                           <p className="text-[10px] text-white/35 font-semibold uppercase tracking-wider">{new Date(settlement.created_at).toLocaleDateString([], { month: 'short', day: 'numeric' })} at {new Date(settlement.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</p>
                         </div>
                         <div className="flex items-center gap-4 shrink-0">
-                          <span className="font-mono font-bold text-sm text-brand-success">+${Number(settlement.amount).toFixed(2)}</span>
+                          <span className="font-mono font-bold text-sm text-brand-success">+₹{Number(settlement.amount).toFixed(2)}</span>
                           {settlement.payer_id === currentUser?.id && (
                             <button
                               onClick={async () => {

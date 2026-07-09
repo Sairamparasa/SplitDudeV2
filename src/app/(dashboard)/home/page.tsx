@@ -447,7 +447,7 @@ export default function HomePage() {
                     <div>
                       <span className="text-[9px] font-bold text-white/30 uppercase tracking-wider block">Recent Expense</span>
                       <h4 className="text-xs font-bold text-white truncate mt-4">{continueItems.recentExpense.title}</h4>
-                      <p className="font-mono font-bold text-xs text-white/80 mt-1">${Number(continueItems.recentExpense.amount).toFixed(2)}</p>
+                      <p className="font-mono font-bold text-xs text-white/80 mt-1">₹{Number(continueItems.recentExpense.amount).toFixed(2)}</p>
                     </div>
                     <span className="text-[10px] font-bold text-brand-accent flex items-center gap-0.5 mt-4 group-hover:underline">
                       <span>View Details</span>
@@ -465,7 +465,7 @@ export default function HomePage() {
                     <p className="text-[11px] font-semibold text-white/70 mt-4 truncate">
                       Payer settled payee
                     </p>
-                    <p className="font-mono font-bold text-xs text-brand-success mt-1">+${Number(continueItems.recentSettlement.amount).toFixed(2)}</p>
+                    <p className="font-mono font-bold text-xs text-brand-success mt-1">+₹{Number(continueItems.recentSettlement.amount).toFixed(2)}</p>
                   </div>
                   <span className="text-[9px] font-semibold text-white/30 uppercase tracking-wider">
                     {new Date(continueItems.recentSettlement.created_at).toLocaleDateString([], { month: 'short', day: 'numeric' })}
@@ -524,11 +524,11 @@ export default function HomePage() {
                   </div>
                   {group.userBalance > 0 ? (
                     <span className="text-brand-success text-[9px] font-bold bg-brand-success/10 border border-brand-success/15 px-2 py-0.5 rounded-full uppercase tracking-wider">
-                      Owed: ${group.userBalance.toFixed(2)}
+                      Owed: ₹{group.userBalance.toFixed(2)}
                     </span>
                   ) : group.userBalance < 0 ? (
                     <span className="text-brand-danger text-[9px] font-bold bg-brand-danger/10 border border-brand-danger/15 px-2 py-0.5 rounded-full uppercase tracking-wider">
-                      Owe: ${Math.abs(group.userBalance).toFixed(2)}
+                      Owe: ₹{Math.abs(group.userBalance).toFixed(2)}
                     </span>
                   ) : (
                     <span className="text-white/35 text-[9px] font-bold bg-white/5 border border-white/10 px-2 py-0.5 rounded-full uppercase tracking-wider">

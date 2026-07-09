@@ -174,7 +174,7 @@ export default function SplitSelector({
                 <div className="flex items-center gap-2">
                   {splitMode === 'exact' ? (
                     <div className="relative w-24">
-                      <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-xs text-white/45">$</span>
+                      <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-xs text-white/45">₹</span>
                       <input
                         type="number"
                         step="0.01"
@@ -202,7 +202,7 @@ export default function SplitSelector({
 
               {isSelected && splitMode === 'equal' && (
                 <span className="text-xs font-mono text-white/50">
-                  ${selectedIds.length > 0 ? (totalAmount / selectedIds.length).toFixed(2) : '0.00'}
+                  ₹{selectedIds.length > 0 ? (totalAmount / selectedIds.length).toFixed(2) : '0.00'}
                 </span>
               )}
             </div>
@@ -215,8 +215,8 @@ export default function SplitSelector({
         <div className="p-3 bg-brand-danger/10 border border-brand-danger/20 rounded-xl flex items-center gap-2 text-xs text-brand-danger">
           <AlertCircle className="w-4 h-4 shrink-0" />
           <span>
-            Sum of exact amounts (${exactSum.toFixed(2)}) must equal total amount (${totalAmount.toFixed(2)}).{' '}
-            Difference: ${(totalAmount - exactSum).toFixed(2)}
+            Sum of exact amounts (₹{exactSum.toFixed(2)}) must equal total amount (₹{totalAmount.toFixed(2)}).{' '}
+            Difference: ₹{(totalAmount - exactSum).toFixed(2)}
           </span>
         </div>
       )}

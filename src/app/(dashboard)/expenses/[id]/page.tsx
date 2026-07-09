@@ -154,7 +154,7 @@ export default function ExpenseDetailPage({ params }: PageProps) {
             </p>
           </div>
           <div className="text-right">
-            <h2 className="text-3xl font-mono font-bold text-white">${Number(expense.amount).toFixed(2)}</h2>
+            <h2 className="text-3xl font-mono font-bold text-white">₹{Number(expense.amount).toFixed(2)}</h2>
             <p className="text-xs text-white/40 mt-1 flex items-center gap-1.5 justify-end">
               <Calendar className="w-3.5 h-3.5" />
               {new Date(expense.created_at).toLocaleDateString()}
@@ -191,12 +191,12 @@ export default function ExpenseDetailPage({ params }: PageProps) {
                         <p className="text-xs text-white/45">
                           {expense.split_mode === 'percentage'
                             ? `Share: ${split.share_value}%`
-                            : `Exact share: $${Number(split.share_value).toFixed(2)}`}
+                            : `Exact share: ₹${Number(split.share_value).toFixed(2)}`}
                         </p>
                       )}
                     </div>
                   </div>
-                  <span className="text-sm font-mono font-semibold text-white">${Number(split.amount).toFixed(2)}</span>
+                  <span className="text-sm font-mono font-semibold text-white">₹{Number(split.amount).toFixed(2)}</span>
                 </div>
               )
             })}

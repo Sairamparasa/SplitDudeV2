@@ -43,7 +43,7 @@ export async function POST(req: NextRequest) {
       group_id,
       user_id: user.id,
       action: 'settlement',
-      details: `${payerProfile?.full_name || 'Someone'} paid $${Number(amount).toFixed(2)} to ${payeeProfile?.full_name || 'someone'}.`,
+      details: `${payerProfile?.full_name || 'Someone'} paid ₹${Number(amount).toFixed(2)} to ${payeeProfile?.full_name || 'someone'}.`,
     })
 
     // 3. Publish SNS Event asynchronously (non-blocking)
@@ -51,7 +51,7 @@ export async function POST(req: NextRequest) {
       eventType: 'SETTLEMENT_COMPLETED',
       userId: user.id,
       groupId: group_id,
-      message: `${payerProfile?.full_name || 'Someone'} settled $${Number(amount).toFixed(2)} with ${payeeProfile?.full_name || 'someone'}.`,
+      message: `${payerProfile?.full_name || 'Someone'} settled ₹${Number(amount).toFixed(2)} with ${payeeProfile?.full_name || 'someone'}.`,
     })
 
     return NextResponse.json({ success: true, data: settlement })

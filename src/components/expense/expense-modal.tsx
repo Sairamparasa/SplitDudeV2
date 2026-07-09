@@ -224,7 +224,7 @@ export default function ExpenseModal({
           const notificationsToInsert = notifyingMembers.map((m) => ({
             user_id: m.id,
             title: 'New Expense Added',
-            content: `A new expense "${title}" of $${numAmount.toFixed(2)} was added to your group.`,
+            content: `A new expense "${title}" of ₹${numAmount.toFixed(2)} was added to your group.`,
             type: 'expense',
           }))
           await supabase.from('notifications').insert(notificationsToInsert)
@@ -274,7 +274,7 @@ export default function ExpenseModal({
           const notificationsToInsert = notifyingMembers.map((m) => ({
             user_id: m.id,
             title: 'New Expense Added',
-            content: `A new expense "${title}" of $${numAmount.toFixed(2)} was added to your group.`,
+            content: `A new expense "${title}" of ₹${numAmount.toFixed(2)} was added to your group.`,
             type: 'expense',
           }))
           await supabase.from('notifications').insert(notificationsToInsert)
@@ -541,7 +541,7 @@ export default function ExpenseModal({
                     className="glass-input w-full text-xs font-semibold bg-brand-bg border border-white/5 focus:border-brand-accent outline-none appearance-none"
                   >
                     <option value="equal">Equally among members</option>
-                    <option value="exact">Exact amounts ($)</option>
+                    <option value="exact">Exact amounts (₹)</option>
                     <option value="percentage">Percentage splits (%)</option>
                   </select>
                 </div>
@@ -598,7 +598,7 @@ export default function ExpenseModal({
                   </div>
                   <div className="flex items-center justify-between">
                     <span className="text-xs text-white/40">Total Amount</span>
-                    <span className="text-base font-bold text-brand-accent font-mono">${parseFloat(amount).toFixed(2)}</span>
+                    <span className="text-base font-bold text-brand-accent font-mono">₹{parseFloat(amount).toFixed(2)}</span>
                   </div>
                   <div className="flex items-center justify-between">
                     <span className="text-xs text-white/40">Paid By</span>
@@ -629,7 +629,7 @@ export default function ExpenseModal({
                       return (
                         <div key={s.user_id} className="flex justify-between items-center bg-white/[0.01] border border-white/[0.03] rounded-xl px-3 py-2 text-xs">
                           <span className="text-white/60 font-medium">{m?.full_name || 'Someone'}</span>
-                          <span className="text-white font-mono font-bold">${Number(s.amount).toFixed(2)}</span>
+                          <span className="text-white font-mono font-bold">₹{Number(s.amount).toFixed(2)}</span>
                         </div>
                       )
                     })}

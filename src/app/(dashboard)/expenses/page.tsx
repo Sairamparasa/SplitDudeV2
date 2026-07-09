@@ -232,7 +232,7 @@ export default function ExpensesPage() {
 
                   <div className="flex items-center gap-4 shrink-0">
                     <div className="text-right">
-                      <p className="font-mono font-bold text-base text-white">${Number(expense.amount).toFixed(2)}</p>
+                      <p className="font-mono font-bold text-base text-white">₹{Number(expense.amount).toFixed(2)}</p>
                       <span className="text-[10px] font-bold text-white/40 uppercase tracking-wide block mt-0.5">
                         {isPayer ? 'You Paid' : 'You Split'}
                       </span>

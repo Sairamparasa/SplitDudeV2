@@ -55,7 +55,7 @@ export async function POST(req: NextRequest) {
       userId: user.id,
       groupId: group_id,
       expenseId: expense.id,
-      message: `${profile?.full_name || 'Someone'} added $${amount} for "${title}".`,
+      message: `${profile?.full_name || 'Someone'} added ₹${amount} for "${title}".`,
     })
 
     return NextResponse.json({ success: true, data: expense })
@@ -119,7 +119,7 @@ export async function PUT(req: NextRequest) {
       userId: user.id,
       groupId: expense.group_id,
       expenseId: id,
-      message: `${profile?.full_name || 'Someone'} updated the expense "${title}" to $${amount}.`,
+      message: `${profile?.full_name || 'Someone'} updated the expense "${title}" to ₹${amount}.`,
     })
 
     return NextResponse.json({ success: true, data: expense })
