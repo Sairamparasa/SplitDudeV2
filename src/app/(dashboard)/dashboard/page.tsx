@@ -2,7 +2,7 @@
 
 import { useQuery } from '@tanstack/react-query'
 import { createClient } from '@/lib/supabase/client'
-import { calculateNetBalances, Member, Expense, ExpenseSplit, Settlement } from '@/lib/utils/debt-simplifier'
+import { calculateFinancialSummary, Member, Expense, ExpenseSplit, Settlement } from '@/lib/utils/debt-simplifier'
 import { TrendingUp, TrendingDown, IndianRupee, Plus, Users, Clock, Loader2, FileText, UserPlus, ChevronRight } from 'lucide-react'
 import { useState, useMemo } from 'react'
 import Link from 'next/link'
@@ -262,51 +262,20 @@ export default function DashboardPage() {
   }
 
   // Calculate Net Balances
-  const groupsWithBalances = useMemo(() => {
-    return (dashboardData?.groups || []).map((group) => {
-      const groupMembers = (group.group_members || []).map((gm: any) => gm.profiles) as Member[]
-      const groupExpenses = dashboardData?.expenses.filter((e) => e.group_id === group.id) || []
-      const groupSplits = dashboardData?.splits.filter((s) =>
-        groupExpenses.some((e) => e.id === s.expense_id)
-      ) || []
-      const groupSettlements = dashboardData?.settlements.filter((s) => s.group_id === group.id) || []
+  // Calculate financial summary using the shared financial summary utility
+  const { groupsWithBalances, totalOwed, totalOwing, monthlySpending } = useMemo(() => {
+    if (!dashboardData || !userData?.id) {
+      return { groupsWithBalances: [], totalOwed: 0, totalOwing: 0, monthlySpending: 0 }
+    }
 
-      const netBalances = calculateNetBalances(groupMembers, groupExpenses, groupSplits, groupSettlements)
-      const userBalance = netBalances[userData?.id || ''] || 0
-
-      return {
-        ...group,
-        userBalance,
-        members: groupMembers,
-      }
-    })
-  }, [dashboardData, userData?.id])
-
-  // Calculate Overall totals
-  const { totalOwed, totalOwing } = useMemo(() => {
-    let owed = 0
-    let owing = 0
-    groupsWithBalances.forEach((g) => {
-      if (g.userBalance > 0) {
-        owed += g.userBalance
-      } else if (g.userBalance < 0) {
-        owing += Math.abs(g.userBalance)
-      }
-    })
-    return { totalOwed: owed, totalOwing: owing }
-  }, [groupsWithBalances])
-
-  // Calculate monthly spending
-  const monthlySpending = useMemo(() => {
-    const currentMonth = new Date().getMonth()
-    const currentYear = new Date().getFullYear()
-    return (dashboardData?.expenses || [])
-      .filter((e) => {
-        const d = new Date(e.created_at)
-        return e.paid_by === userData?.id && d.getMonth() === currentMonth && d.getFullYear() === currentYear
-      })
-      .reduce((sum, e) => sum + Number(e.amount), 0)
-  }, [dashboardData?.expenses, userData?.id])
+    return calculateFinancialSummary(
+      userData.id,
+      dashboardData.groups,
+      dashboardData.expenses,
+      dashboardData.splits,
+      dashboardData.settlements
+    )
+  }, [dashboardData, userData])
 
   // Compile monthly chart data for Recharts (last 6 months)
   const chartData = useMemo(() => {

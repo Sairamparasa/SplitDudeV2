@@ -237,6 +237,7 @@ export default function GroupsPage() {
       
       // Invalidate query to fetch real database objects
       queryClient.invalidateQueries({ queryKey: ['groups', currentUser.id] })
+      queryClient.invalidateQueries({ queryKey: ['dashboardData', currentUser.id] })
     } catch (err: any) {
       // Rollback optimistic update
       queryClient.setQueryData(['groups', currentUser.id], previousGroups)

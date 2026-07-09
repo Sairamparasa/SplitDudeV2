@@ -2,8 +2,8 @@
 
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { createClient } from '@/lib/supabase/client'
-import { calculateNetBalances, Member, Expense, ExpenseSplit, Settlement } from '@/lib/utils/debt-simplifier'
-import { PlusCircle, FileText, Users, UserPlus, ArrowRight, Bell, CheckCircle2, Zap, Clock, ChevronRight, ArrowUpRight, ShieldCheck } from 'lucide-react'
+import { calculateFinancialSummary, Member, Expense, ExpenseSplit, Settlement } from '@/lib/utils/debt-simplifier'
+import { PlusCircle, FileText, Users, UserPlus, ArrowRight, Bell, Zap, Clock, ChevronRight, ArrowUpRight, ShieldCheck } from 'lucide-react'
 import { useState, useMemo, useEffect } from 'react'
 import Link from 'next/link'
 import { motion } from 'framer-motion'
@@ -214,59 +214,59 @@ export default function HomePage() {
     return 'Good Evening'
   }, [])
 
-  // Calculate net balances per group
-  const groupsWithBalances = useMemo(() => {
-    if (!dashboardData) return []
-    return dashboardData.groups.map((group) => {
-      const groupMembers = (group.group_members || []).map((gm: any) => gm.profiles) as Member[]
-      const groupExpenses = dashboardData.expenses.filter((e) => e.group_id === group.id)
-      const groupSplits = dashboardData.splits.filter((s) =>
-        groupExpenses.some((e) => e.id === s.expense_id)
-      )
-      const groupSettlements = dashboardData.settlements.filter((s) => s.group_id === group.id)
+  // Calculate net balances per group using the shared financial summary utility
+  const { groupsWithBalances, totalOwed, totalOwing } = useMemo(() => {
+    if (!dashboardData || !userData?.id) {
+      return { groupsWithBalances: [], totalOwed: 0, totalOwing: 0 }
+    }
 
-      const netBalances = calculateNetBalances(groupMembers, groupExpenses, groupSplits, groupSettlements)
-      const userBalance = netBalances[userData?.id || ''] || 0
+    const summary = calculateFinancialSummary(
+      userData.id,
+      dashboardData.groups,
+      dashboardData.expenses,
+      dashboardData.splits,
+      dashboardData.settlements
+    )
 
+    const groupsWithActivity = summary.groupsWithBalances.map((group) => {
       // Find last activity inside this group
       const groupActivity = dashboardData.recentActivity.filter(
-        (a) => a.groupName === group.name
+        (a: any) => a.groupName === group.name
       )
       const lastActivityDate = groupActivity[0]?.createdAt || new Date(group.created_at)
 
       return {
         ...group,
-        userBalance,
-        memberCount: groupMembers.length,
         lastActivityDate,
       }
     })
-  }, [dashboardData, userData?.id])
 
-  // Get dynamic statistics & insights
-  const { totalOwed, totalOwing } = useMemo(() => {
-    let owed = 0
-    let owing = 0
-    groupsWithBalances.forEach((g) => {
-      if (g.userBalance > 0) owed += g.userBalance
-      else if (g.userBalance < 0) owing += Math.abs(g.userBalance)
-    })
-    return { totalOwed: owed, totalOwing: owing }
-  }, [groupsWithBalances])
+    return {
+      groupsWithBalances: groupsWithActivity,
+      totalOwed: summary.totalOwed,
+      totalOwing: summary.totalOwing,
+    }
+  }, [dashboardData, userData])
 
   const hasUploadedReceiptRecently = useMemo(() => {
     if (!dashboardData) return false
     return dashboardData.expenses.some(e => e.paid_by === userData?.id && (e as any).receipt_url)
-  }, [dashboardData, userData?.id])
+  }, [dashboardData, userData])
 
   const smartInsight = useMemo(() => {
     if (totalOwed === 0 && totalOwing === 0) {
       return { text: 'You are all caught up.', icon: ShieldCheck, color: 'text-brand-success', bg: 'bg-brand-success/10 border-brand-success/20' }
     }
+    if (totalOwing > 0) {
+      return { text: `You owe ₹${totalOwing.toFixed(2)}.`, icon: Clock, color: 'text-brand-warning', bg: 'bg-brand-warning/10 border-brand-warning/20' }
+    }
+    if (totalOwed > 0) {
+      return { text: `You are owed ₹${totalOwed.toFixed(2)}.`, icon: ArrowUpRight, color: 'text-brand-accent', bg: 'bg-brand-accent/10 border-brand-accent/20' }
+    }
     if (hasUploadedReceiptRecently) {
       return { text: 'You saved time by scanning receipts.', icon: Zap, color: 'text-brand-accent', bg: 'bg-brand-accent/10 border-brand-accent/20' }
     }
-    return { text: 'You have no pending settlements.', icon: CheckCircle2, color: 'text-brand-success', bg: 'bg-brand-success/10 border-brand-success/20' }
+    return { text: 'You have pending settlements.', icon: Clock, color: 'text-brand-warning', bg: 'bg-brand-warning/10 border-brand-warning/20' }
   }, [totalOwed, totalOwing, hasUploadedReceiptRecently])
 
   // Calculate: Continue where you left off

@@ -155,3 +155,56 @@ export function simplifyDebts(
 
   return transactions
 }
+
+export function calculateFinancialSummary(
+  userId: string,
+  groups: any[],
+  expenses: Expense[],
+  splits: ExpenseSplit[],
+  settlements: Settlement[]
+) {
+  let totalOwed = 0
+  let totalOwing = 0
+
+  const groupsWithBalances = groups.map((group) => {
+    const groupMembers = (group.group_members || []).map((gm: any) => gm.profiles) as Member[]
+    const groupExpenses = expenses.filter((e) => e.group_id === group.id)
+    const groupSplits = splits.filter((s) =>
+      groupExpenses.some((e) => e.id === s.expense_id)
+    )
+    const groupSettlements = settlements.filter((s) => s.group_id === group.id)
+
+    const netBalances = calculateNetBalances(groupMembers, groupExpenses, groupSplits, groupSettlements)
+    const userBalance = netBalances[userId] || 0
+
+    if (userBalance > 0) {
+      totalOwed += userBalance
+    } else if (userBalance < 0) {
+      totalOwing += Math.abs(userBalance)
+    }
+
+    return {
+      ...group,
+      userBalance,
+      members: groupMembers,
+      memberCount: groupMembers.length,
+    }
+  })
+
+  // Calculate monthly spending
+  const currentMonth = new Date().getMonth()
+  const currentYear = new Date().getFullYear()
+  const monthlySpending = expenses
+    .filter((e) => {
+      const d = new Date(e.created_at)
+      return e.paid_by === userId && d.getMonth() === currentMonth && d.getFullYear() === currentYear
+    })
+    .reduce((sum, e) => sum + Number(e.amount), 0)
+
+  return {
+    groupsWithBalances,
+    totalOwed,
+    totalOwing,
+    monthlySpending,
+  }
+}

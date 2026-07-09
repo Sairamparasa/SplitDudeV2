@@ -1,7 +1,7 @@
 'use client'
 
 import { use, useState, useMemo } from 'react'
-import { useQuery } from '@tanstack/react-query'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { createClient } from '@/lib/supabase/client'
 import { calculateNetBalances, simplifyDebts, Member, Expense, ExpenseSplit, Settlement } from '@/lib/utils/debt-simplifier'
 import { Users, Trash2, Edit, X, AlertCircle, ArrowLeft, Loader2, FileText, Sparkles, CheckCircle, ChevronRight, Share2 } from 'lucide-react'
@@ -22,6 +22,7 @@ interface PageProps {
 export default function GroupDetailPage({ params }: PageProps) {
   const router = useRouter()
   const supabase = createClient()
+  const queryClient = useQueryClient()
   const { id: groupId } = use(params)
 
   const emojis = ['✈️', '🏠', '🍔', '🚗', '🎓', '💼', '🍿', '🎮', '🏋️', '🛒', '🐾', '🎸']
@@ -238,6 +239,8 @@ export default function GroupDetailPage({ params }: PageProps) {
         .eq('id', groupId)
 
       if (error) throw error
+      queryClient.invalidateQueries({ queryKey: ['groups'] })
+      queryClient.invalidateQueries({ queryKey: ['dashboardData'] })
       router.push('/groups')
       router.refresh()
     } catch (err: any) {
@@ -396,6 +399,7 @@ export default function GroupDetailPage({ params }: PageProps) {
       }
 
       setSettleModalOpen(false)
+      queryClient.invalidateQueries({ queryKey: ['dashboardData'] })
       refetch()
     } catch (err: any) {
       setSettleError(err.message)
@@ -640,6 +644,7 @@ export default function GroupDetailPage({ params }: PageProps) {
                               onClick={async () => {
                                 if (confirm('Delete this settlement log?')) {
                                   await supabase.from('settlements').delete().eq('id', settlement.id)
+                                  queryClient.invalidateQueries({ queryKey: ['dashboardData'] })
                                   refetch()
                                 }
                               }}
