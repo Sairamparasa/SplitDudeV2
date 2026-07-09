@@ -3,7 +3,7 @@
 import { useQuery } from '@tanstack/react-query'
 import { createClient } from '@/lib/supabase/client'
 import { calculateNetBalances, Member, Expense, ExpenseSplit, Settlement } from '@/lib/utils/debt-simplifier'
-import { TrendingUp, TrendingDown, DollarSign, Plus, Users, Clock, Loader2, Sparkles, PlusCircle, FileText, UserPlus, CreditCard, ChevronRight } from 'lucide-react'
+import { TrendingUp, TrendingDown, IndianRupee, Plus, Users, Clock, Loader2, Sparkles, PlusCircle, FileText, UserPlus, CreditCard, ChevronRight } from 'lucide-react'
 import { useState, useMemo } from 'react'
 import Link from 'next/link'
 import { motion, AnimatePresence } from 'framer-motion'
@@ -380,7 +380,7 @@ export default function DashboardPage() {
             </span>
           </div>
           <h3 className="text-3xl font-bold tracking-tight text-white font-mono">
-            ${totalOwed.toFixed(2)}
+            ₹{totalOwed.toFixed(2)}
           </h3>
           <p className="text-xs text-white/45 mt-1.5">Outstanding balances friends need to pay you</p>
         </motion.div>
@@ -400,7 +400,7 @@ export default function DashboardPage() {
             </span>
           </div>
           <h3 className="text-3xl font-bold tracking-tight text-white font-mono">
-            ${totalOwing.toFixed(2)}
+            ₹{totalOwing.toFixed(2)}
           </h3>
           <p className="text-xs text-white/45 mt-1.5">Unsettled debts you owe to group members</p>
         </motion.div>
@@ -413,14 +413,14 @@ export default function DashboardPage() {
           <div className="absolute top-0 right-0 w-24 h-24 bg-brand-accent/5 rounded-full blur-2xl group-hover:bg-brand-accent/10 transition-colors"></div>
           <div className="flex justify-between items-start mb-4">
             <div className="p-3 bg-brand-accent/15 rounded-xl border border-brand-accent/20">
-              <DollarSign className="w-5 h-5 text-brand-accent" />
+              <IndianRupee className="w-5 h-5 text-brand-accent" />
             </div>
             <span className="text-[10px] font-bold bg-brand-accent/10 text-brand-accent px-2.5 py-1 rounded-full uppercase tracking-wider">
               Spent This Month
             </span>
           </div>
           <h3 className="text-3xl font-bold tracking-tight text-white font-mono">
-            ${monthlySpending.toFixed(2)}
+            ₹{monthlySpending.toFixed(2)}
           </h3>
           <p className="text-xs text-white/45 mt-1.5">Total group expenditures funded by you</p>
         </motion.div>
@@ -613,11 +613,11 @@ export default function DashboardPage() {
                       </div>
                       {group.userBalance > 0 ? (
                         <span className="text-brand-success text-[10px] font-bold bg-brand-success/10 border border-brand-success/20 px-2.5 py-1 rounded-full shrink-0 text-right uppercase tracking-wider">
-                          Owed: ${group.userBalance.toFixed(2)}
+                          Owed: ₹{group.userBalance.toFixed(2)}
                         </span>
                       ) : group.userBalance < 0 ? (
                         <span className="text-brand-danger text-[10px] font-bold bg-brand-danger/10 border border-brand-danger/20 px-2.5 py-1 rounded-full shrink-0 text-right uppercase tracking-wider">
-                          You owe: ${Math.abs(group.userBalance).toFixed(2)}
+                          You owe: ₹{Math.abs(group.userBalance).toFixed(2)}
                         </span>
                       ) : (
                         <span className="text-white/40 text-[10px] font-bold bg-white/5 border border-white/10 px-2.5 py-1 rounded-full shrink-0 text-right uppercase tracking-wider">
@@ -684,7 +684,7 @@ export default function DashboardPage() {
                     {activity.type === 'expense' ? (
                       <div>
                         <p className="text-sm font-semibold text-white">
-                          {activity.creatorName} added <span className="text-brand-accent font-bold">${activity.amount.toFixed(2)}</span>
+                          {activity.creatorName} added <span className="text-brand-accent font-bold">₹{activity.amount.toFixed(2)}</span>
                         </p>
                         <p className="text-xs text-white/45 mt-0.5">
                           For "{activity.title}" in <span className="text-white/60 font-medium">{activity.groupName}</span>
@@ -693,7 +693,7 @@ export default function DashboardPage() {
                     ) : (
                       <div>
                         <p className="text-sm font-semibold text-white">
-                          {activity.payerName} settled <span className="text-brand-success font-bold">${activity.amount.toFixed(2)}</span>
+                          {activity.payerName} settled <span className="text-brand-success font-bold">₹{activity.amount.toFixed(2)}</span>
                         </p>
                         <p className="text-xs text-white/45 mt-0.5">
                           To {activity.payeeName} in <span className="text-white/60 font-medium">{activity.groupName}</span>
