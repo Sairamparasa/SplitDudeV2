@@ -219,7 +219,7 @@ export default function DashboardLayout({
 
       {/* Main Content Area */}
       <main className="flex-1 flex flex-col h-full overflow-y-auto p-4 md:p-6 md:pl-0">
-        <Header onToggleSidebar={() => setSidebarOpen(true)} />
+        <Header onToggleSidebar={() => setSidebarOpen(true)} onSearchClick={() => setPaletteOpen(true)} />
         <div className="flex-1 w-full max-w-7xl mx-auto pb-10">
           {children}
         </div>
