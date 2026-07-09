@@ -139,9 +139,9 @@ export default function ExpensesPage() {
             onChange={(e) => setSelectedGroupFilter(e.target.value)}
             className="bg-transparent border-none outline-none text-xs w-full text-white/70 bg-brand-bg select-none"
           >
-            <option value="">All Groups</option>
+            <option value="" className="bg-[#0A0B14] text-white">All Groups</option>
             {groups?.map((g: any) => (
-              <option key={g.id} value={g.id}>{g.name}</option>
+              <option key={g.id} value={g.id} className="bg-[#0A0B14] text-white">{g.name}</option>
             ))}
           </select>
         </div>
@@ -154,10 +154,10 @@ export default function ExpensesPage() {
             onChange={(e) => setSortBy(e.target.value as any)}
             className="bg-transparent border-none outline-none text-xs w-full text-white/70 bg-brand-bg select-none"
           >
-            <option value="date-desc">Newest First</option>
-            <option value="date-asc">Oldest First</option>
-            <option value="amount-desc">Highest Amount</option>
-            <option value="amount-asc">Lowest Amount</option>
+            <option value="date-desc" className="bg-[#0A0B14] text-white">Newest First</option>
+            <option value="date-asc" className="bg-[#0A0B14] text-white">Oldest First</option>
+            <option value="amount-desc" className="bg-[#0A0B14] text-white">Highest Amount</option>
+            <option value="amount-asc" className="bg-[#0A0B14] text-white">Lowest Amount</option>
           </select>
         </div>
       </div>

@@ -541,7 +541,7 @@ export default function ExpenseModal({
                       className="glass-input w-full text-xs font-semibold bg-brand-bg border border-white/5 focus:border-brand-accent outline-none appearance-none"
                     >
                       {groups.map((g: any) => (
-                        <option key={g.id} value={g.id}>{g.name}</option>
+                        <option key={g.id} value={g.id} className="bg-[#0A0B14] text-white">{g.name}</option>
                       ))}
                     </select>
                   </div>
@@ -553,7 +553,7 @@ export default function ExpenseModal({
                       className="glass-input w-full text-xs font-semibold bg-brand-bg border border-white/5 focus:border-brand-accent outline-none appearance-none"
                     >
                       {members.map((m: any) => (
-                        <option key={m.id} value={m.id}>{m.id === currentUserId ? 'You' : m.full_name}</option>
+                        <option key={m.id} value={m.id} className="bg-[#0A0B14] text-white">{m.id === currentUserId ? 'You' : m.full_name}</option>
                       ))}
                     </select>
                   </div>
@@ -653,9 +653,9 @@ export default function ExpenseModal({
                     onChange={(e) => setSplitMode(e.target.value as any)}
                     className="glass-input w-full text-xs font-semibold bg-brand-bg border border-white/5 focus:border-brand-accent outline-none appearance-none"
                   >
-                    <option value="equal">Equally among members</option>
-                    <option value="exact">Exact amounts (₹)</option>
-                    <option value="percentage">Percentage splits (%)</option>
+                    <option value="equal" className="bg-[#0A0B14] text-white">Equally among members</option>
+                    <option value="exact" className="bg-[#0A0B14] text-white">Exact amounts (₹)</option>
+                    <option value="percentage" className="bg-[#0A0B14] text-white">Percentage splits (%)</option>
                   </select>
                 </div>
 

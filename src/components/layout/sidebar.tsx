@@ -122,7 +122,6 @@ export default function Sidebar({ onCloseMobile }: SidebarProps) {
               className="w-10 h-10 rounded-full border border-white/10 group-hover:border-brand-accent transition-all object-cover shrink-0"
             />
             <div className="min-w-0 flex-1">
-              <p className="text-xs text-white/40">Premium Account</p>
               <p className="text-sm font-semibold truncate group-hover:text-brand-accent transition-colors">{profile.full_name}</p>
               <p className="text-[10px] text-white/30 font-mono truncate">{profile.unique_code}</p>
             </div>

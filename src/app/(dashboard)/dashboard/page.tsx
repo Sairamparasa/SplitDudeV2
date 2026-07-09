@@ -514,9 +514,9 @@ export default function DashboardPage() {
                 onChange={(e) => setQuickGroupId(e.target.value)}
                 className="glass-input w-full py-3 px-4 text-xs bg-brand-bg border border-white/5 focus:border-brand-accent outline-none appearance-none"
               >
-                <option value="">Select Group...</option>
+                <option value="" className="bg-[#0A0B14] text-white">Select Group...</option>
                 {dashboardData?.groups.map((g) => (
-                  <option key={g.id} value={g.id}>
+                  <option key={g.id} value={g.id} className="bg-[#0A0B14] text-white">
                     {g.name}
                   </option>
                 ))}
