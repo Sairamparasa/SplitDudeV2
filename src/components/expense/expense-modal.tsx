@@ -1,10 +1,10 @@
 'use client'
 
-import { X, AlertCircle, Loader2, Upload, ArrowRight, ArrowLeft, Check, FileText, Coffee, Car, Plane, ShoppingBag, Tv, HelpCircle, CheckCircle, Sparkles } from 'lucide-react'
-import { useState, useEffect, useMemo, useRef } from 'react'
+import { X, AlertCircle, Loader2, Upload, ArrowRight, ArrowLeft, Check, FileText, Coffee, Car, Plane, ShoppingBag, Tv, HelpCircle } from 'lucide-react'
+import { useState, useEffect } from 'react'
 import { useQueryClient } from '@tanstack/react-query'
 import { createClient } from '@/lib/supabase/client'
-import { Member, ExpenseSplit } from '@/lib/utils/debt-simplifier'
+import { Member } from '@/lib/utils/debt-simplifier'
 import { motion, AnimatePresence } from 'framer-motion'
 import SplitSelector from './split-selector'
 
@@ -122,7 +122,6 @@ export default function ExpenseModal({
   // Receipt File upload
   const [receiptFile, setReceiptFile] = useState<File | null>(null)
   const [receiptUploading, setReceiptUploading] = useState(false)
-  const [scanning, setScanning] = useState(false)
   const [prefilled, setPrefilled] = useState(false)
   const [ocrReceiptUrl, setOcrReceiptUrl] = useState<string | null>(null)
 
@@ -175,7 +174,6 @@ export default function ExpenseModal({
 
       setError(null)
       setStep(2) // Transition to scanning animation
-      setScanning(true)
 
       let fileToUpload = file
       try {
@@ -191,7 +189,6 @@ export default function ExpenseModal({
           setAmount('128.42')
           setPrefilled(true)
           setTimeout(() => setPrefilled(false), 2000)
-          setScanning(false)
           setStep(3) // Transition to edit details page
           return
         }
@@ -214,10 +211,9 @@ export default function ExpenseModal({
         } else {
           setError(result.error || 'Failed to scan receipt. Please enter manually.')
         }
-      } catch (err: any) {
+      } catch {
         setError('Scanning error. Plase fill manually.')
       } finally {
-        setScanning(false)
         setStep(3)
       }
     }
@@ -421,10 +417,6 @@ export default function ExpenseModal({
     { id: 'other', label: 'Other', icon: HelpCircle },
   ]
 
-  const activeCategoryIcon = useMemo(() => {
-    const cat = categories.find((c) => c.id === category)
-    return cat ? cat.icon : HelpCircle
-  }, [category])
 
   return (
     <AnimatePresence>

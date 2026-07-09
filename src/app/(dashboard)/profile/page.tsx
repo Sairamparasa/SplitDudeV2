@@ -3,7 +3,7 @@
 import { useQuery } from '@tanstack/react-query'
 import { createClient } from '@/lib/supabase/client'
 import { useState, useEffect } from 'react'
-import { User, Mail, Shield, Check, Copy, AlertCircle, Loader2, Award, Zap, Calendar, Heart } from 'lucide-react'
+import { User, Mail, Shield, Check, Copy, AlertCircle, Loader2, Award } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { motion } from 'framer-motion'
 

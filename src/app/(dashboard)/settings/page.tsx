@@ -2,8 +2,7 @@
 
 import { useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
-import { Lock, Check, AlertCircle, Loader2, Info, Server, Settings, ShieldAlert, Sparkles, CheckCircle2 } from 'lucide-react'
-import { motion } from 'framer-motion'
+import { Lock, Check, AlertCircle, Loader2, Info, Server, Settings, ShieldAlert, CheckCircle2 } from 'lucide-react'
 
 export default function SettingsPage() {
   const supabase = createClient()

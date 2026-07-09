@@ -1,6 +1,6 @@
 'use client'
 
-import { Bell, Menu, Search, Copy, Check, Sparkles, ChevronRight } from 'lucide-react'
+import { Bell, Menu, Search, Copy, Check, ChevronRight } from 'lucide-react'
 import { useEffect, useState, useMemo } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import Link from 'next/link'

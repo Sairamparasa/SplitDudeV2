@@ -2,11 +2,10 @@
 
 import { useQuery } from '@tanstack/react-query'
 import { createClient } from '@/lib/supabase/client'
-import { FileText, Search, Plus, Calendar, Loader2, ArrowRight, TrendingUp, Filter, ArrowUpDown, Tag } from 'lucide-react'
+import { FileText, Search, Plus, Calendar, ArrowRight, Filter, ArrowUpDown, Tag } from 'lucide-react'
 import { useState, useMemo } from 'react'
 import Link from 'next/link'
 import dynamic from 'next/dynamic'
-import { motion, AnimatePresence } from 'framer-motion'
 
 const ExpenseModal = dynamic(() => import('@/components/expense/expense-modal'), {
   loading: () => null,

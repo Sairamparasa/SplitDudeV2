@@ -3,7 +3,7 @@
 import Sidebar from '@/components/layout/sidebar'
 import Header from '@/components/layout/header'
 import { useState, useEffect, useRef, useMemo } from 'react'
-import { X, Search, Command, Users, User, Receipt, Bell, Settings, ChevronRight, CornerDownLeft, Home } from 'lucide-react'
+import { X, Search, Command, Users, User, Receipt, Bell, Settings, CornerDownLeft, Home } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { AnimatePresence, motion } from 'framer-motion'
@@ -84,21 +84,21 @@ export default function DashboardLayout({
     return () => window.removeEventListener('keydown', handleKeyDown)
   }, [])
 
-  // Static command items
-  const staticCommands = [
-    { name: 'Go to Home', action: () => router.push('/home'), icon: Home, category: 'Navigation' },
-    { name: 'Go to Dashboard', action: () => router.push('/dashboard'), icon: Command, category: 'Navigation' },
-    { name: 'Go to Groups', action: () => router.push('/groups'), icon: Users, category: 'Navigation' },
-    { name: 'Go to Expenses', action: () => router.push('/expenses'), icon: Receipt, category: 'Navigation' },
-    { name: 'Go to Friends', action: () => router.push('/friends'), icon: User, category: 'Navigation' },
-    { name: 'Go to Notifications', action: () => router.push('/notifications'), icon: Bell, category: 'Navigation' },
-    { name: 'Go to Settings', action: () => router.push('/settings'), icon: Settings, category: 'Navigation' },
-  ]
-
   // Filtered results combination
   const filteredItems = useMemo(() => {
     const query = searchQuery.toLowerCase().trim()
     const result: any[] = []
+
+    // Static command items
+    const staticCommands = [
+      { name: 'Go to Home', action: () => router.push('/home'), icon: Home, category: 'Navigation' },
+      { name: 'Go to Dashboard', action: () => router.push('/dashboard'), icon: Command, category: 'Navigation' },
+      { name: 'Go to Groups', action: () => router.push('/groups'), icon: Users, category: 'Navigation' },
+      { name: 'Go to Expenses', action: () => router.push('/expenses'), icon: Receipt, category: 'Navigation' },
+      { name: 'Go to Friends', action: () => router.push('/friends'), icon: User, category: 'Navigation' },
+      { name: 'Go to Notifications', action: () => router.push('/notifications'), icon: Bell, category: 'Navigation' },
+      { name: 'Go to Settings', action: () => router.push('/settings'), icon: Settings, category: 'Navigation' },
+    ]
 
     // 1. Match Navigation Commands
     staticCommands.forEach((cmd) => {
@@ -150,7 +150,7 @@ export default function DashboardLayout({
     })
 
     return result
-  }, [searchQuery, groups, friends, expenses])
+  }, [searchQuery, groups, friends, expenses, router])
 
   // Handle arrow key navigation inside search palette
   useEffect(() => {

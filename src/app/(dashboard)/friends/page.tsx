@@ -3,7 +3,7 @@
 import { useState, useMemo } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { createClient } from '@/lib/supabase/client'
-import { UserCheck, UserPlus, Search, Copy, Check, Loader2, AlertCircle, QrCode, ArrowRight, X } from 'lucide-react'
+import { UserCheck, UserPlus, Search, Copy, Check, Loader2, AlertCircle, QrCode, X } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 
 export default function FriendsPage() {
@@ -225,10 +225,6 @@ export default function FriendsPage() {
     return requestsList.filter((r) => r.receiver_id === currentUser.id)
   }, [requestsList, currentUser])
 
-  const outboundRequests = useMemo(() => {
-    if (!requestsList || !currentUser) return []
-    return requestsList.filter((r) => r.sender_id === currentUser.id)
-  }, [requestsList, currentUser])
 
   const isLoading = isFriendsLoading || isRequestsLoading
 

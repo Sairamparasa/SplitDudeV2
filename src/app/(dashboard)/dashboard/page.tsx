@@ -3,10 +3,10 @@
 import { useQuery } from '@tanstack/react-query'
 import { createClient } from '@/lib/supabase/client'
 import { calculateNetBalances, Member, Expense, ExpenseSplit, Settlement } from '@/lib/utils/debt-simplifier'
-import { TrendingUp, TrendingDown, IndianRupee, Plus, Users, Clock, Loader2, Sparkles, PlusCircle, FileText, UserPlus, CreditCard, ChevronRight } from 'lucide-react'
+import { TrendingUp, TrendingDown, IndianRupee, Plus, Users, Clock, Loader2, FileText, UserPlus, ChevronRight } from 'lucide-react'
 import { useState, useMemo } from 'react'
 import Link from 'next/link'
-import { motion, AnimatePresence } from 'framer-motion'
+import { motion } from 'framer-motion'
 import dynamic from 'next/dynamic'
 
 const ExpenseModal = dynamic(() => import('@/components/expense/expense-modal'), {

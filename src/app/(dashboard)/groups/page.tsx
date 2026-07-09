@@ -2,7 +2,7 @@
 
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { createClient } from '@/lib/supabase/client'
-import { Plus, Search, Users, X, AlertCircle, Loader2, Info, ArrowRight } from 'lucide-react'
+import { Plus, Search, Users, X, AlertCircle, Loader2, ArrowRight } from 'lucide-react'
 import { useState, useMemo } from 'react'
 import Link from 'next/link'
 import { motion, AnimatePresence } from 'framer-motion'
@@ -44,7 +44,7 @@ export default function GroupsPage() {
   })
 
   // Fetch all groups user belongs to
-  const { data: groups, isLoading, refetch } = useQuery({
+  const { data: groups, isLoading } = useQuery({
     queryKey: ['groups', currentUser?.id],
     enabled: !!currentUser?.id,
     queryFn: async () => {

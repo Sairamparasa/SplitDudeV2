@@ -3,7 +3,7 @@
 import { useMemo } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { createClient } from '@/lib/supabase/client'
-import { Bell, Check, Loader2, RefreshCw, Trash2, ArrowRight, UserPlus, Coffee, AlertCircle, FileText } from 'lucide-react'
+import { Bell, Check, RefreshCw, Trash2, UserPlus, Coffee } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 
 export default function NotificationsPage() {

@@ -3,7 +3,7 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { createClient } from '@/lib/supabase/client'
 import { calculateNetBalances, Member, Expense, ExpenseSplit, Settlement } from '@/lib/utils/debt-simplifier'
-import { PlusCircle, FileText, Users, UserPlus, ArrowRight, Bell, Sparkles, CheckCircle2, Zap, Clock, ChevronRight, ArrowUpRight, ShieldCheck } from 'lucide-react'
+import { PlusCircle, FileText, Users, UserPlus, ArrowRight, Bell, CheckCircle2, Zap, Clock, ChevronRight, ArrowUpRight, ShieldCheck } from 'lucide-react'
 import { useState, useMemo, useEffect } from 'react'
 import Link from 'next/link'
 import { motion } from 'framer-motion'

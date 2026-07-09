@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { motion } from 'framer-motion'
-import { Activity, Users, Receipt, Shield, Sparkles } from 'lucide-react'
+import { Users, Receipt, Shield, Sparkles } from 'lucide-react'
 import LogoIcon from '@/components/layout/logo-icon'
 
 export default function Home() {

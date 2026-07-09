@@ -78,7 +78,7 @@ function JoinGroupForm() {
     }
 
     checkAndJoinGroup()
-  }, [groupId, router])
+  }, [groupId, router, supabase])
 
   return (
     <div className="min-h-screen flex items-center justify-center p-4 bg-brand-bg text-white">
