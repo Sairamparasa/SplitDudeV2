@@ -30,7 +30,7 @@ export async function POST(req: NextRequest) {
       contentType: file.type,
     }
 
-    console.log(`Forwarding receipt to API Gateway: ${apiGatewayUrl}/receipts/analyze`)
+
 
     const response = await fetch(`${apiGatewayUrl}/receipts/analyze`, {
       method: 'POST',
@@ -47,7 +47,7 @@ export async function POST(req: NextRequest) {
     }
 
     const result = await response.json()
-    console.log('API Gateway success response:', result)
+
 
     return NextResponse.json(result)
   } catch (error: any) {

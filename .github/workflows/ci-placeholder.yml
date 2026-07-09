@@ -1,0 +1,35 @@
+name: "SplitDude CI Placeholder"
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build:
+    name: "Lint & Compile Build Verification"
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: "Checkout Repository"
+        uses: actions/checkout@v4
+
+      - name: "Setup Node.js"
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: "Install Dependencies"
+        run: npm ci
+
+      - name: "Verify Lint Guidelines"
+        run: npm run lint
+
+      - name: "Run Production Build Compilation"
+        run: npm run build
+        env:
+          NEXT_PUBLIC_SUPABASE_URL: "https://mock-url.supabase.co"
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: "mock-key"
+          # Mock variables to prevent build-time static checks from failing

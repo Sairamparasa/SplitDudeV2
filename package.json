@@ -1,7 +1,32 @@
 {
   "name": "splitdude",
-  "version": "0.1.0",
-  "private": true,
+  "version": "1.0.0",
+  "private": false,
+  "description": "A premium, serverless group expense splitter and debt simplifier with AWS receipt OCR integration.",
+  "keywords": [
+    "nextjs",
+    "react",
+    "supabase",
+    "aws",
+    "textract",
+    "expense-tracker",
+    "debt-simplifier",
+    "split-bills",
+    "serverless"
+  ],
+  "author": "Sairam Parasa",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Sairamparasa/SplitDudeV2.git"
+  },
+  "bugs": {
+    "url": "https://github.com/Sairamparasa/SplitDudeV2/issues"
+  },
+  "homepage": "https://split-dude-v2.vercel.app",
+  "engines": {
+    "node": ">=18.0.0"
+  },
   "scripts": {
     "dev": "next dev",
     "build": "next build",

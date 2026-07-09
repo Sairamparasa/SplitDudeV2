@@ -1,0 +1,30 @@
+name: "❓ Question or Help"
+description: "Ask a question or seek help with installation/deployment"
+title: "[QUESTION]: "
+labels: ["help wanted", "question"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Need help with local installation, Supabase triggers, or AWS deployment configuration? Ask away!
+  - type: textarea
+    id: query
+    attributes:
+      label: "What is your question?"
+      placeholder: "Ask your question clearly and describe what you are trying to achieve."
+    validations:
+      required: true
+  - type: textarea
+    id: context
+    attributes:
+      label: "What configurations / files are you working on?"
+      placeholder: "Mention if you are configuring AWS Lambda, API Gateway, Supabase schemas, local next.config.ts, or Vercel environment variables."
+    validations:
+      required: false
+  - type: textarea
+    id: attempts
+    attributes:
+      label: "What have you tried so far?"
+      placeholder: "Describe any steps, logs, or debugging outputs you've already verified."
+    validations:
+      required: false
