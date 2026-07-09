@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
-import { LayoutDashboard, Users, Receipt, Settings, LogOut, User, UserCheck, Bell, Sparkles, Home } from 'lucide-react'
+import { LayoutDashboard, Users, Receipt, Settings, LogOut, User, UserCheck, Bell, Home } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import { useEffect, useState, useMemo } from 'react'
 import { motion } from 'framer-motion'
@@ -74,10 +74,6 @@ export default function Sidebar({ onCloseMobile }: SidebarProps) {
           <span className="text-xl font-bold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-white via-white to-white/70">
             SplitDude
           </span>
-          <div className="flex items-center gap-1 mt-0.5">
-            <Sparkles className="w-3 h-3 text-brand-accent animate-pulse" />
-            <span className="text-[9px] font-semibold text-brand-accent uppercase tracking-wider">Premium App</span>
-          </div>
         </div>
       </div>
 
