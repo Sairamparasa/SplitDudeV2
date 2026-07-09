@@ -2,6 +2,7 @@
 
 import { X, AlertCircle, Loader2, Upload, ArrowRight, ArrowLeft, Check, FileText, Coffee, Car, Plane, ShoppingBag, Tv, HelpCircle, CheckCircle, Sparkles } from 'lucide-react'
 import { useState, useEffect, useMemo, useRef } from 'react'
+import { useQueryClient } from '@tanstack/react-query'
 import { createClient } from '@/lib/supabase/client'
 import { Member, ExpenseSplit } from '@/lib/utils/debt-simplifier'
 import { motion, AnimatePresence } from 'framer-motion'
@@ -24,6 +25,75 @@ function generateUniqueFileName(originalName: string): string {
   return `${randomStr}-${timestamp}.${fileExt}`
 }
 
+// Client-side image compression to preserve OCR accuracy while targeting 300-800KB size
+function compressImage(file: File): Promise<File> {
+  return new Promise((resolve) => {
+    if (!file.type.startsWith('image/')) {
+      resolve(file)
+      return
+    }
+
+    const reader = new FileReader()
+    reader.readAsDataURL(file)
+    reader.onload = (event) => {
+      const img = new Image()
+      img.src = event.target?.result as string
+      img.onload = () => {
+        const canvas = document.createElement('canvas')
+        const MAX_WIDTH = 1200
+        const MAX_HEIGHT = 1200
+        let width = img.width
+        let height = img.height
+
+        if (width > height) {
+          if (width > MAX_WIDTH) {
+            height = Math.round((height * MAX_WIDTH) / width)
+            width = MAX_WIDTH
+          }
+        } else {
+          if (height > MAX_HEIGHT) {
+            width = Math.round((width * MAX_HEIGHT) / height)
+            height = MAX_HEIGHT
+          }
+        }
+
+        canvas.width = width
+        canvas.height = height
+        const ctx = canvas.getContext('2d')
+        if (!ctx) {
+          resolve(file)
+          return
+        }
+
+        ctx.drawImage(img, 0, 0, width, height)
+
+        canvas.toBlob(
+          (blob) => {
+            if (!blob) {
+              resolve(file)
+              return
+            }
+            // Keep original extension in name but write blob as optimized jpeg
+            const compressedFile = new File([blob], file.name, {
+              type: 'image/jpeg',
+              lastModified: Date.now(),
+            })
+            resolve(compressedFile)
+          },
+          'image/jpeg',
+          0.8
+        )
+      }
+      img.onerror = () => resolve(file)
+    }
+    reader.onerror = () => resolve(file)
+  })
+}
+
+function getTempId(): string {
+  return `temp-expense-id-${Date.now()}`
+}
+
 export default function ExpenseModal({
   isOpen,
   onClose,
@@ -33,6 +103,7 @@ export default function ExpenseModal({
   initialStep,
 }: ExpenseModalProps) {
   const supabase = createClient()
+  const queryClient = useQueryClient()
   
   // Guided steps: 1 (Upload), 2 (Scanning), 3 (Details), 4 (Split), 5 (Confirm)
   const [step, setStep] = useState(initialStep || 1)
@@ -95,18 +166,24 @@ export default function ExpenseModal({
         return
       }
 
-      if (file.size > 5 * 1024 * 1024) {
-        setError('File size too large. Max limit is 5MB.')
+      const maxSize = file.type.startsWith('image/') ? 15 * 1024 * 1024 : 5 * 1024 * 1024
+      if (file.size > maxSize) {
+        setError(file.type.startsWith('image/') ? 'Image file size is too large. Max limit is 15MB.' : 'PDF file size too large. Max limit is 5MB.')
         setReceiptFile(null)
         return
       }
 
       setError(null)
-      setReceiptFile(file)
       setStep(2) // Transition to scanning animation
       setScanning(true)
 
+      let fileToUpload = file
       try {
+        if (file.type.startsWith('image/')) {
+          fileToUpload = await compressImage(file)
+        }
+        setReceiptFile(fileToUpload)
+
         const mockActive = typeof window !== 'undefined' && (process.env.NEXT_PUBLIC_MOCK_SUPABASE === 'true' || !process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL.includes('your-supabase-url'))
         if (mockActive) {
           await new Promise((resolve) => setTimeout(resolve, 2200))
@@ -120,7 +197,7 @@ export default function ExpenseModal({
         }
 
         const formData = new FormData()
-        formData.append('file', file)
+        formData.append('file', fileToUpload)
 
         const res = await fetch('/api/receipts/analyze', {
           method: 'POST',
@@ -162,6 +239,9 @@ export default function ExpenseModal({
     }
 
     setSaving(true)
+    let previousGroupDetail: any = null
+    let previousDashboardData: any = null
+
     try {
       let receiptUrl = ocrReceiptUrl
 
@@ -184,6 +264,42 @@ export default function ExpenseModal({
         receiptUrl = urlData.publicUrl
         setReceiptUploading(false)
       }
+
+      // Save previous state snapshots
+      previousGroupDetail = queryClient.getQueryData(['groupDetail', selectedGroupId])
+      previousDashboardData = queryClient.getQueryData(['dashboardData', currentUserId])
+
+      // Optimistically update group details cache
+      const tempExpenseId = getTempId()
+      const optimisticExpense = {
+        id: tempExpenseId,
+        group_id: selectedGroupId,
+        title,
+        amount: numAmount,
+        description: '',
+        paid_by: paidBy,
+        split_mode: splitMode,
+        receipt_url: receiptUrl || null,
+        created_at: new Date().toISOString(),
+      }
+
+      queryClient.setQueryData(['groupDetail', selectedGroupId], (old: any) => {
+        if (!old) return old
+        return {
+          ...old,
+          expenses: [optimisticExpense, ...(old.expenses || [])],
+          splits: [...(old.splits || []), ...splits.map((s) => ({
+            id: `temp-split-id-${Math.random()}`,
+            expense_id: tempExpenseId,
+            user_id: s.user_id,
+            amount: s.amount,
+            share_value: s.share_value || null,
+          }))],
+        }
+      })
+
+      // Close the modal early so the user sees the new expense list item instantly
+      onClose()
 
       const mockActive = typeof window !== 'undefined' && (process.env.NEXT_PUBLIC_MOCK_SUPABASE === 'true' || !process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL.includes('your-supabase-url'))
 
@@ -281,9 +397,14 @@ export default function ExpenseModal({
         }
       }
 
-      onClose()
+      // Sync caches to guarantee correct data
+      queryClient.invalidateQueries({ queryKey: ['groupDetail', selectedGroupId] })
+      queryClient.invalidateQueries({ queryKey: ['dashboardData', currentUserId] })
     } catch (err: any) {
-      setError(err?.message || 'Failed to save expense.')
+      // Rollback cache updates on error
+      queryClient.setQueryData(['groupDetail', selectedGroupId], previousGroupDetail)
+      queryClient.setQueryData(['dashboardData', currentUserId], previousDashboardData)
+      alert(err.message || 'Failed to save expense. Rolled back state.')
     } finally {
       setSaving(false)
       setReceiptUploading(false)

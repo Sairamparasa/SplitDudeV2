@@ -1,6 +1,6 @@
 'use client'
 
-import { useQuery } from '@tanstack/react-query'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { createClient } from '@/lib/supabase/client'
 import { Plus, Search, Users, X, AlertCircle, Loader2, Info, ArrowRight } from 'lucide-react'
 import { useState, useMemo } from 'react'
@@ -16,6 +16,7 @@ interface Profile {
 
 export default function GroupsPage() {
   const supabase = createClient()
+  const queryClient = useQueryClient()
   const [modalOpen, setModalOpen] = useState(false)
   const [groupName, setGroupName] = useState('')
   const [groupDesc, setGroupDesc] = useState('')
@@ -145,6 +146,29 @@ export default function GroupsPage() {
     if (!currentUser) return
 
     setCreating(true)
+    const previousGroups = queryClient.getQueryData(['groups', currentUser.id])
+
+    // Optimistically update the UI list
+    const tempId = `temp-group-id-${Date.now()}`
+    const optimisticGroup = {
+      id: tempId,
+      name: groupName,
+      description: groupDesc,
+      icon: groupIcon,
+      created_by: currentUser.id,
+      created_at: new Date().toISOString(),
+      group_members: [
+        { user_id: currentUser.id, profiles: { id: currentUser.id, full_name: 'You', avatar_url: null, unique_code: '' } },
+        ...selectedMembers.map((m) => ({ user_id: m.id, profiles: m })),
+      ],
+    }
+
+    queryClient.setQueryData(['groups', currentUser.id], (old: any) => {
+      return [optimisticGroup, ...(old || [])]
+    })
+
+    // Close the modal early for instant responsiveness
+    setModalOpen(false)
 
     try {
       const mockActive = typeof window !== 'undefined' && (process.env.NEXT_PUBLIC_MOCK_SUPABASE === 'true' || !process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL.includes('your-supabase-url'))
@@ -162,9 +186,7 @@ export default function GroupsPage() {
           .single()
 
         if (groupError) {
-          setFormError(groupError.message)
-          setCreating(false)
-          return
+          throw groupError
         }
 
         const memberships = [
@@ -177,9 +199,7 @@ export default function GroupsPage() {
           .insert(memberships)
 
         if (membersError) {
-          setFormError(membersError.message)
-          setCreating(false)
-          return
+          throw membersError
         }
 
         fetch('/api/groups', {
@@ -205,19 +225,23 @@ export default function GroupsPage() {
         })
         const result = await res.json()
         if (!res.ok) {
-          setFormError(result.error || 'Failed to create group')
-          setCreating(false)
-          return
+          throw new Error(result.error || 'Failed to create group')
         }
       }
 
+      // Reset form fields
       setGroupName('')
       setGroupDesc('')
       setGroupIcon('✈️')
       setSelectedMembers([])
-      setModalOpen(false)
-      refetch()
+      
+      // Invalidate query to fetch real database objects
+      queryClient.invalidateQueries({ queryKey: ['groups', currentUser.id] })
     } catch (err: any) {
+      // Rollback optimistic update
+      queryClient.setQueryData(['groups', currentUser.id], previousGroups)
+      // Open modal back and show the error message
+      setModalOpen(true)
       setFormError(err?.message || 'An unexpected error occurred.')
     } finally {
       setCreating(false)

@@ -169,12 +169,43 @@ export default function FriendsPage() {
       if (!res.ok) throw new Error(result.error || 'Failed to update request')
       return result
     },
-    onSuccess: () => {
+    onMutate: async ({ requestId, action }) => {
+      await queryClient.cancelQueries({ queryKey: ['friends'] })
+      await queryClient.cancelQueries({ queryKey: ['friendRequests'] })
+
+      const previousFriends = queryClient.getQueryData(['friends'])
+      const previousRequests = queryClient.getQueryData(['friendRequests'])
+
+      if (action === 'accept') {
+        const requestList = previousRequests as any[] || []
+        const acceptedRequest = requestList.find((r) => r.id === requestId)
+        if (acceptedRequest) {
+          // Extract sender profile details from the request payload
+          const friendProfile = acceptedRequest.sender
+          if (friendProfile) {
+            queryClient.setQueryData(['friends'], (old: any) => {
+              return [friendProfile, ...(old || [])]
+            })
+          }
+        }
+      }
+
+      queryClient.setQueryData(['friendRequests'], (old: any) => {
+        return (old || []).filter((r: any) => r.id !== requestId)
+      })
+
+      return { previousFriends, previousRequests }
+    },
+    onError: (err: any, variables, context: any) => {
+      if (context) {
+        queryClient.setQueryData(['friends'], context.previousFriends)
+        queryClient.setQueryData(['friendRequests'], context.previousRequests)
+      }
+      alert(err.message)
+    },
+    onSettled: () => {
       queryClient.invalidateQueries({ queryKey: ['friends'] })
       queryClient.invalidateQueries({ queryKey: ['friendRequests'] })
-    },
-    onError: (err: any) => {
-      alert(err.message)
     },
   })
 
@@ -332,8 +363,18 @@ export default function FriendsPage() {
           <h3 className="text-lg font-bold mb-6">All Friends</h3>
 
           {isLoading ? (
-            <div className="flex-grow flex items-center justify-center">
-              <Loader2 className="w-8 h-8 text-brand-accent animate-spin" />
+            <div className="space-y-3.5">
+              {[1, 2, 3, 4].map((i) => (
+                <div key={i} className="flex justify-between items-center p-4 bg-white/2 border border-white/5 rounded-2xl">
+                  <div className="flex items-center gap-3 w-full">
+                    <div className="w-10 h-10 rounded-xl shimmer-bg shrink-0"></div>
+                    <div className="space-y-2 w-1/3">
+                      <div className="h-4 shimmer-bg rounded-lg"></div>
+                      <div className="h-3 shimmer-bg rounded-lg w-2/3"></div>
+                    </div>
+                  </div>
+                </div>
+              ))}
             </div>
           ) : !friendsList || friendsList.length === 0 ? (
             <div className="flex-grow flex flex-col items-center justify-center text-center p-8 border border-dashed border-white/8 rounded-2xl bg-white/[0.01]">

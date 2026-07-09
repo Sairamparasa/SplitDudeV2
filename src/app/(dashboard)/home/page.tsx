@@ -1,10 +1,10 @@
 'use client'
 
-import { useQuery } from '@tanstack/react-query'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { createClient } from '@/lib/supabase/client'
 import { calculateNetBalances, Member, Expense, ExpenseSplit, Settlement } from '@/lib/utils/debt-simplifier'
 import { PlusCircle, FileText, Users, UserPlus, ArrowRight, Bell, Sparkles, CheckCircle2, Zap, Clock, ChevronRight, ArrowUpRight, ShieldCheck } from 'lucide-react'
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import Link from 'next/link'
 import { motion } from 'framer-motion'
 import dynamic from 'next/dynamic'
@@ -16,6 +16,7 @@ const ExpenseModal = dynamic(() => import('@/components/expense/expense-modal'),
 
 export default function HomePage() {
   const supabase = createClient()
+  const queryClient = useQueryClient()
   const [expenseModalOpen, setExpenseModalOpen] = useState(false)
   const [modalInitialStep, setModalInitialStep] = useState(1)
 
@@ -57,8 +58,8 @@ export default function HomePage() {
       const { data: groupsData, error: groupsError } = await supabase
         .from('groups')
         .select(`
-          *,
-          group_members (*, profiles(*))
+          id, name, description, icon, created_by, created_at,
+          group_members (group_id, user_id, role, profiles (id, full_name, avatar_url, unique_code))
         `)
       if (groupsError) throw groupsError
 
@@ -71,7 +72,7 @@ export default function HomePage() {
 
       const { data: expensesData, error: expensesError } = await supabase
         .from('expenses')
-        .select('*')
+        .select('id, group_id, title, amount, paid_by, split_mode, created_at')
         .in('group_id', groupIds)
       if (expensesError) throw expensesError
 
@@ -82,7 +83,7 @@ export default function HomePage() {
       if (expenseIds.length > 0) {
         const { data: splitsData, error: splitsError } = await supabase
           .from('expense_splits')
-          .select('*')
+          .select('id, expense_id, user_id, amount, share_value')
           .in('expense_id', expenseIds)
         if (splitsError) throw splitsError
         splits = splitsData as any
@@ -90,7 +91,7 @@ export default function HomePage() {
 
       const { data: settlements, error: settlementsError } = await supabase
         .from('settlements')
-        .select('*, payer:profiles!settlements_payer_id_fkey(full_name), payee:profiles!settlements_payee_id_fkey(full_name)')
+        .select('id, group_id, payer_id, payee_id, amount, created_at, payer:profiles!settlements_payer_id_fkey(id, full_name), payee:profiles!settlements_payee_id_fkey(id, full_name)')
         .in('group_id', groupIds)
       if (settlementsError) throw settlementsError
 
@@ -144,6 +145,46 @@ export default function HomePage() {
       }
     },
   })
+
+  // Prefetch groups page data and notifications data for instant navigation
+  useEffect(() => {
+    if (userData?.id) {
+      // 1. Prefetch Groups List
+      queryClient.prefetchQuery({
+        queryKey: ['groups', userData.id],
+        queryFn: async () => {
+          const { data, error } = await supabase
+            .from('groups')
+            .select(`
+              id, name, description, icon, created_by, created_at,
+              group_members (user_id, profiles (id, full_name, avatar_url, unique_code))
+            `)
+          if (error) throw error
+          return data
+        }
+      })
+
+      // 2. Prefetch Notifications
+      queryClient.prefetchQuery({
+        queryKey: ['notifications'],
+        queryFn: async () => {
+          const mockActive = typeof window !== 'undefined' && (process.env.NEXT_PUBLIC_MOCK_SUPABASE === 'true' || !process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL.includes('your-supabase-url'))
+          if (mockActive) {
+            const { data, error } = await supabase
+              .from('notifications')
+              .select('*')
+              .order('created_at', { ascending: false })
+            if (error) throw error
+            return data || []
+          }
+          const res = await fetch('/api/notifications')
+          const result = await res.json()
+          if (!res.ok) throw new Error(result.error || 'Failed to fetch')
+          return result.data || []
+        }
+      })
+    }
+  }, [userData?.id, queryClient, supabase])
 
   // Fetch notifications
   const { data: notifications, isLoading: isNotificationsLoading } = useQuery({

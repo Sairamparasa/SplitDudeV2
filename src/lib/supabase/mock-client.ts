@@ -391,6 +391,7 @@ class MockAuth {
   async getUser() {
     if (!isBrowser) {
       try {
+        // eslint-disable-next-line @typescript-eslint/no-require-imports
         const { cookies } = require('next/headers')
         const cookieStore = await cookies()
         const mockUserCookie = cookieStore.get('splitdude_session_user')

@@ -4,7 +4,7 @@ import { use, useState, useMemo } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { createClient } from '@/lib/supabase/client'
 import { calculateNetBalances, simplifyDebts, Member, Expense, ExpenseSplit, Settlement } from '@/lib/utils/debt-simplifier'
-import { Users, Trash2, Edit, X, AlertCircle, ArrowLeft, Loader2, FileText, Sparkles, DollarSign, CheckCircle, Clock, ChevronRight } from 'lucide-react'
+import { Users, Trash2, Edit, X, AlertCircle, ArrowLeft, Loader2, FileText, Sparkles, DollarSign, CheckCircle, Clock, ChevronRight, Share2 } from 'lucide-react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
@@ -31,6 +31,14 @@ export default function GroupDetailPage({ params }: PageProps) {
   const [addMemberModalOpen, setAddMemberModalOpen] = useState(false)
   const [settleModalOpen, setSettleModalOpen] = useState(false)
   const [expenseModalOpen, setExpenseModalOpen] = useState(false)
+  const [copied, setCopied] = useState(false)
+
+  const handleCopyInviteLink = () => {
+    const inviteUrl = `${window.location.origin}/groups/join?groupId=${groupId}`
+    navigator.clipboard.writeText(inviteUrl)
+    setCopied(true)
+    setTimeout(() => setCopied(false), 2000)
+  }
 
   // Edit Group states
   const [editName, setEditName] = useState('')
@@ -422,6 +430,13 @@ export default function GroupDetailPage({ params }: PageProps) {
               </button>
             </>
           )}
+          <button
+            onClick={handleCopyInviteLink}
+            className="px-4 py-2.5 bg-white/3 border border-white/5 hover:bg-white/6 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 text-brand-accent hover:border-brand-accent/30"
+          >
+            <Share2 className="w-3.5 h-3.5" />
+            <span>{copied ? 'Copied!' : 'Copy Link'}</span>
+          </button>
           <button
             onClick={() => setAddMemberModalOpen(true)}
             className="px-4 py-2.5 bg-white/3 border border-white/5 hover:bg-white/6 rounded-xl text-xs font-bold transition-all cursor-pointer"

@@ -1,15 +1,18 @@
 'use client'
 
-import { useState } from 'react'
-import { useRouter } from 'next/navigation'
+import { useState, Suspense } from 'react'
+import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { motion } from 'framer-motion'
 import { createClient } from '@/lib/supabase/client'
 import { Mail, Lock, AlertCircle, Loader2 } from 'lucide-react'
 import LogoIcon from '@/components/layout/logo-icon'
 
-export default function LoginPage() {
+function LoginForm() {
   const router = useRouter()
+  const searchParams = useSearchParams()
+  const nextParam = searchParams.get('next') || searchParams.get('redirectTo') || '/home'
+  
   const supabase = createClient()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -24,7 +27,7 @@ export default function LoginPage() {
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: `${window.location.origin}/auth/callback`,
+          redirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent(nextParam)}`,
         },
       })
       if (error) throw error
@@ -51,7 +54,7 @@ export default function LoginPage() {
         return
       }
 
-      router.push('/home')
+      router.push(nextParam)
       router.refresh()
     } catch (err: any) {
       setError(err?.message || 'An unexpected error occurred.')
@@ -195,5 +198,17 @@ export default function LoginPage() {
         </div>
       </motion.div>
     </div>
+  )
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen flex items-center justify-center text-white/40">
+        <Loader2 className="w-8 h-8 animate-spin text-brand-accent" />
+      </div>
+    }>
+      <LoginForm />
+    </Suspense>
   )
 }

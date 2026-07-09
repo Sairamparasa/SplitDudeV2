@@ -48,8 +48,8 @@ export default function DashboardPage() {
       const { data: groupsData, error: groupsError } = await supabase
         .from('groups')
         .select(`
-          *,
-          group_members (*, profiles(*))
+          id, name, description, icon, created_by, created_at,
+          group_members (group_id, user_id, role, profiles (id, full_name, avatar_url, unique_code))
         `)
       if (groupsError) throw groupsError
 
@@ -62,7 +62,7 @@ export default function DashboardPage() {
 
       const { data: expensesData, error: expensesError } = await supabase
         .from('expenses')
-        .select('*')
+        .select('id, group_id, title, amount, paid_by, split_mode, created_at')
         .in('group_id', groupIds)
       if (expensesError) throw expensesError
 
@@ -73,7 +73,7 @@ export default function DashboardPage() {
       if (expenseIds.length > 0) {
         const { data: splitsData, error: splitsError } = await supabase
           .from('expense_splits')
-          .select('*')
+          .select('id, expense_id, user_id, amount, share_value')
           .in('expense_id', expenseIds)
         if (splitsError) throw splitsError
         splits = splitsData as any
@@ -81,7 +81,7 @@ export default function DashboardPage() {
 
       const { data: settlements, error: settlementsError } = await supabase
         .from('settlements')
-        .select('*, payer:profiles!settlements_payer_id_fkey(full_name), payee:profiles!settlements_payee_id_fkey(full_name)')
+        .select('id, group_id, payer_id, payee_id, amount, created_at, payer:profiles!settlements_payer_id_fkey(id, full_name), payee:profiles!settlements_payee_id_fkey(id, full_name)')
         .in('group_id', groupIds)
       if (settlementsError) throw settlementsError
 
